@@ -4,6 +4,8 @@ import StravaConnectionStatus from "@/components/strava/StravaConnectionStatus";
 import StravaActivitiesList from "@/components/strava/StravaActivitiesList";
 import MedicalDocumentsCount from "./MedicalDocumentsCount";
 import PhysicalAnalysisPanel from "./PhysicalAnalysisPanel";
+import NutritionPanel from "./NutritionPanel";
+import TrainingPlanPanel from "./TrainingPlanPanel";
 
 interface AthleteDashboardProps {
   user: any;
@@ -112,6 +114,12 @@ export default function AthleteDashboard({ user }: AthleteDashboardProps) {
           {/* Physical Analysis */}
           <div className="mt-8">
             <PhysicalAnalysisPanel />
+          </div>
+
+          {/* Training Plan + Nutrition */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TrainingPlanPanel />
+            <NutritionPanel />
           </div>
 
           {/* Quick Actions */}

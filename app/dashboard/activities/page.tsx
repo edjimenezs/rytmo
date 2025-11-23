@@ -19,3 +19,4 @@ export default async function ActivitiesRoute() {
   return <ActivitiesPage user={user} />;
 }
 
+

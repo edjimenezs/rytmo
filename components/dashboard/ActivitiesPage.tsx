@@ -303,3 +303,4 @@ export default function ActivitiesPage({ user }: { user: any }) {
   );
 }
 
+

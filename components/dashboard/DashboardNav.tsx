@@ -45,6 +45,12 @@ export default function DashboardNav({ userName, userRole }: DashboardNavProps) 
                   <Link href="/dashboard/activities" className={linkClass("/dashboard/activities")}>
                     Activities
                   </Link>
+                  <Link href="/dashboard/training-plan" className={linkClass("/dashboard/training-plan")}>
+                    Training Plan
+                  </Link>
+                  <Link href="/dashboard/nutrition-plan" className={linkClass("/dashboard/nutrition-plan")}>
+                    Nutrition Plan
+                  </Link>
                   <Link href="/dashboard/medical" className={linkClass("/dashboard/medical")}>
                     Medical Data
                   </Link>

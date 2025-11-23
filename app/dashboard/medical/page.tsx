@@ -19,3 +19,4 @@ export default async function MedicalDataRoute() {
   return <MedicalDataPage user={user} />;
 }
 
+

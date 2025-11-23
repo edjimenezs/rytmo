@@ -28,3 +28,4 @@ export default function MedicalDocumentsCount() {
   return <span className="text-lg font-medium text-gray-900">{count}</span>;
 }
 
+

@@ -19,3 +19,4 @@ export default async function UploadMedicalRoute() {
   return <UploadMedicalDocument user={user} />;
 }
 
+

@@ -352,9 +352,11 @@ export default function PhysicalAnalysisPanel() {
           style={{ color: isDark ? "#dbeafe" : palette.text }}
         >
           <p className={`text-xs uppercase tracking-wide font-semibold ${isDark ? "text-blue-100" : "text-blue-700"}`}>
-            Pace medio
+            FC media
           </p>
-          <p className={`text-2xl font-bold ${isDark ? "text-blue-100" : "text-blue-700"}`}>{formatPace(data.summary.avgPace)}</p>
+          <p className={`text-2xl font-bold ${isDark ? "text-blue-100" : "text-blue-700"}`}>
+            {data.summary.avgHeartRate ? `${data.summary.avgHeartRate} bpm` : "—"}
+          </p>
         </div>
       </div>
 
@@ -377,6 +379,95 @@ export default function PhysicalAnalysisPanel() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pace visualizer por disciplina */}
+      {data.lastActivities.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Ritmo/velocidad por disciplina</h3>
+          <div className="space-y-2">
+            {Object.entries(
+              data.lastActivities.reduce((acc: Record<string, { totalPace: number; count: number; icon: string }>, act) => {
+                // pace for running/walking (min/km), for cycling (km/h), swimming (min/100m)
+                let metric = "";
+                let value = 0;
+                if (act.type === "CYCLING" && act.distanceKm && act.durationMin) {
+                  const hours = act.durationMin / 60;
+                  if (hours > 0) {
+                    value = act.distanceKm / hours; // km/h
+                    metric = `${value.toFixed(1)} km/h`;
+                  }
+                } else if (act.type === "SWIMMING" && act.distanceKm && act.durationMin) {
+                  const meters = act.distanceKm * 1000;
+                  const seconds = act.durationMin * 60;
+                  if (meters > 0 && seconds > 0) {
+                    const pacePer100Sec = seconds / (meters / 100);
+                    const paceMin = Math.floor(pacePer100Sec / 60);
+                    const paceSec = Math.round(pacePer100Sec % 60)
+                      .toString()
+                      .padStart(2, "0");
+                    metric = `${paceMin}:${paceSec} min/100m`;
+                    value = pacePer100Sec; // smaller is better
+                  }
+                } else if (act.distanceKm && act.durationMin) {
+                  const pace = act.durationMin / act.distanceKm;
+                  const minutes = Math.floor(pace);
+                  const seconds = Math.round((pace - minutes) * 60)
+                    .toString()
+                    .padStart(2, "0");
+                  metric = `${minutes}:${seconds} min/km`;
+                  value = pace;
+                }
+
+                const icon =
+                  act.type === "CYCLING" ? "🚴" : act.type === "SWIMMING" ? "🏊" : act.type === "RUNNING" ? "🏃" : "🏋️";
+
+                if (!metric) return acc;
+                if (!acc[act.type]) acc[act.type] = { totalPace: 0, count: 0, icon };
+                acc[act.type].totalPace += value;
+                acc[act.type].count += 1;
+                return acc;
+              }, {})
+            ).map(([type, info]) => {
+              const avgMetric =
+                type === "CYCLING"
+                  ? `${(info.totalPace / info.count).toFixed(1)} km/h`
+                  : type === "SWIMMING"
+                  ? (() => {
+                      const pacePer100Sec = info.totalPace / info.count;
+                      const paceMin = Math.floor(pacePer100Sec / 60);
+                      const paceSec = Math.round(pacePer100Sec % 60)
+                        .toString()
+                        .padStart(2, "0");
+                      return `${paceMin}:${paceSec} min/100m`;
+                    })()
+                  : (() => {
+                      const pace = info.totalPace / info.count;
+                      const minutes = Math.floor(pace);
+                      const seconds = Math.round((pace - minutes) * 60)
+                        .toString()
+                        .padStart(2, "0");
+                      return `${minutes}:${seconds} min/km`;
+                    })();
+
+              return (
+                <div
+                  key={type}
+                  className="border border-slate-200 rounded-xl p-3 flex items-center justify-between bg-white shadow-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{info.icon}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{type}</p>
+                      <p className="text-xs text-slate-600">Promedio reciente</p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-blue-700 animate-pulse-slow">{avgMetric}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

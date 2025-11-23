@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/prisma';
-import { ActivitySource } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +22,7 @@ export async function GET(request: NextRequest) {
     const where: any = { userId };
     
     if (source) {
-      where.source = source as ActivitySource;
+      where.source = source;
     }
 
     const activities = await prisma.trainingActivity.findMany({
