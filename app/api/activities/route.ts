@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/prisma';
 
+type ActivitySourceValue = 'MANUAL' | 'STRAVA' | 'TRAINING_PEAKS' | 'OTHER_APP';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,14 +18,14 @@ export async function GET(request: NextRequest) {
 
     const userId = (session.user as any).id;
     const searchParams = request.nextUrl.searchParams;
-    const source = searchParams.get('source');
+    const source = searchParams.get('source') as ActivitySourceValue | null;
     const limit = parseInt(searchParams.get('limit') || '20');
 
     const where: any = { userId };
     
     if (source) {
       // Filter by source (string literal to avoid enum issues on client generation)
-      where.source = source;
+      where.source = source as ActivitySourceValue;
     }
 
     const activities = await prisma.trainingActivity.findMany({
