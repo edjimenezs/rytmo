@@ -22,10 +22,7 @@ export async function GET(_req: NextRequest) {
       },
     });
 
-    const totalDuration = activities.reduce(
-      (sum, a) => sum + (a.duration || 0),
-      0
-    );
+    const totalDuration = activities.reduce((sum: number, a) => sum + (a.duration || 0), 0);
     const hours = totalDuration / 3600;
 
     // Heurística simple para macros (placeholder, a ajustar con nutriólogo + IA)
