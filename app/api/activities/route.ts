@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const where: any = { userId };
     
     if (source) {
+      // Filter by source (string literal to avoid enum issues on client generation)
       where.source = source;
     }
 
