@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/prisma';
 
 type ActivitySourceValue = 'MANUAL' | 'STRAVA' | 'TRAINING_PEAKS' | 'OTHER_APP';
+// Note: using string literal for source to avoid enum import issues in generated Prisma client
 
 export async function GET(request: NextRequest) {
   try {
