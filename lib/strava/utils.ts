@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { stravaClient } from './client';
-import { ActivityType, ActivitySource } from '@prisma/client';
+import { ActivityType } from '@prisma/client';
 import { StravaActivity } from './types';
 
 export async function getValidAccessToken(userId: string): Promise<string | null> {
@@ -59,7 +59,7 @@ export async function syncStravaActivity(userId: string, stravaActivity: StravaA
     where: {
       userId,
       externalId: stravaActivity.id.toString(),
-      source: ActivitySource.STRAVA,
+      source: 'STRAVA',
     },
   });
 
@@ -89,7 +89,7 @@ export async function syncStravaActivity(userId: string, stravaActivity: StravaA
         userId,
         name: stravaActivity.name,
         type: mapStravaActivityTypeToLocal(stravaActivity.type),
-        source: ActivitySource.STRAVA,
+        source: 'STRAVA',
         externalId: stravaActivity.id.toString(),
         distance: stravaActivity.distance,
         duration: stravaActivity.moving_time,
