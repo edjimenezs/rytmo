@@ -26,13 +26,13 @@ export async function GET(_req: NextRequest) {
     });
 
     const totalDistance =
-      activities.reduce((sum, a) => sum + (a.distance || 0), 0) / 1000;
+      activities.reduce((sum: number, a: { distance: number | null }) => sum + (a.distance ?? 0), 0) / 1000;
     const totalDuration = activities.reduce(
-      (sum, a) => sum + (a.duration || 0),
+      (sum: number, a: { duration: number | null }) => sum + (a.duration ?? 0),
       0
     );
     const avgHR =
-      activities.reduce((sum, a) => sum + (a.averageHeartRate || 0), 0) /
+      activities.reduce((sum: number, a: { averageHeartRate: number | null }) => sum + (a.averageHeartRate ?? 0), 0) /
       (activities.filter((a) => a.averageHeartRate).length || 1);
 
     let suggestions = [
