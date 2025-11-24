@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 interface Summary {
   totalActivities: number;
@@ -61,6 +59,17 @@ function formatPace(pace: number | null) {
     .padStart(2, "0");
   return `${minutes}:${seconds} min/km`;
 }
+
+const formatDateShort = (value: string | Date) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(new Date(value));
+
+const formatDateTime = (value: string | Date) =>
+  new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 
 function formatDisciplinePace(activity: LastActivity) {
   if (!activity.distanceKm || !activity.durationMin) {
@@ -509,7 +518,7 @@ export default function PhysicalAnalysisPanel() {
                 className={`border rounded-xl p-3 ${isDark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"}`}
               >
                 <p className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-                  {format(new Date(week.week), "d MMM", { locale: es })}
+                  {formatDateShort(week.week)}
                 </p>
                 <p className={`text-sm font-bold ${isDark ? "text-slate-50" : "text-slate-900"}`}>{week.distanceKm} km</p>
                 <p className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`}>{week.durationHours} h</p>
@@ -560,7 +569,7 @@ export default function PhysicalAnalysisPanel() {
                 <div>
                   <p className="text-sm font-semibold">{act.name}</p>
                   <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-                    {format(new Date(act.startDate), "d MMM, HH:mm", { locale: es })} · {act.type}
+                    {formatDateTime(act.startDate)} · {act.type}
                   </p>
                 </div>
                 <div className={`text-xs flex items-center gap-4 font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}>

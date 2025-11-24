@@ -5,9 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserRole } from "@prisma/client";
 
+interface RegisterFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: UserRole;
+}
+
 export default function RegisterForm() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterFormData>({
     name: "",
     email: "",
     password: "",

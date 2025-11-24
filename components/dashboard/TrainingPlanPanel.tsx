@@ -1,8 +1,5 @@
 'use client';
 
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-
 const samplePlan = [
   { day: "Lunes", session: "Rodaje suave", durationMin: 45, intensity: "Z2", notes: "Respira nasal, cadencia estable" },
   { day: "Martes", session: "Intervalos", durationMin: 60, intensity: "Z4", notes: "6x4' fuerte / 2' suave" },
@@ -13,8 +10,11 @@ const samplePlan = [
   { day: "Domingo", session: "Descanso", durationMin: 0, intensity: "Rest", notes: "Movilidad ligera" },
 ];
 
+const getWeekLabel = () =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(new Date());
+
 export default function TrainingPlanPanel() {
-  const weekLabel = format(new Date(), "d MMM", { locale: es });
+  const weekLabel = getWeekLabel();
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
