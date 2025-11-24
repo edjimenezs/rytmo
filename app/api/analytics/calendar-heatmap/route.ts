@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Group by date
     const groupedData = new Map<string, { count: number; duration: number }>();
 
-    activities.forEach((activity) => {
+    activities.forEach((activity: { startDate: Date; duration: number | null }) => {
       const dateKey = format(new Date(activity.startDate), "yyyy-MM-dd");
       const existing = groupedData.get(dateKey) || { count: 0, duration: 0 };
 
