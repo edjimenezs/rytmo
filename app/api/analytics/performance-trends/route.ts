@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
-import { startOfDay, subDays, format } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
     // Group by week to reduce noise
     const groupedData = new Map<string, { paceSum: number; distanceSum: number; durationSum: number; count: number }>();
 
-    activities.forEach((activity) => {
-      const dateKey = format(new Date(activity.startDate), "yyyy-MM-dd");
+    activities.forEach((activity: { startDate: string | Date; averagePace: number | null; distance: number | null; duration: number | null }) => {
+      const dateKey = new Intl.DateTimeFormat("en-CA").format(new Date(activity.startDate));
       const existing = groupedData.get(dateKey) || { paceSum: 0, distanceSum: 0, durationSum: 0, count: 0 };
 
       groupedData.set(dateKey, {
@@ -64,7 +64,10 @@ export async function GET(request: NextRequest) {
     // Calculate averages and format for response
     const result = Array.from(groupedData.entries())
       .map(([date, data]) => ({
-        date: format(new Date(date), "MMM dd"),
+        date: new Intl.DateTimeFormat("es-ES", {
+          month: "short",
+          day: "2-digit",
+        }).format(new Date(date)),
         averagePace: data.count > 0 ? Math.round((data.paceSum / data.count) * 100) / 100 : 0,
         averageSpeed: data.count > 0 && data.paceSum > 0 ? Math.round((60 / (data.paceSum / data.count)) * 10) / 10 : 0,
         distance: Math.round(data.distanceSum * 10) / 10,
