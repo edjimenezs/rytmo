@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest) {
     );
     const avgHR =
       activities.reduce((sum: number, a: { averageHeartRate: number | null }) => sum + (a.averageHeartRate ?? 0), 0) /
-      (activities.filter((a) => a.averageHeartRate).length || 1);
+      (activities.filter((a: { averageHeartRate: number | null }) => a.averageHeartRate).length || 1);
 
     let suggestions = [
       {
