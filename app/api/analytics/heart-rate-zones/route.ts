@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     let totalMinutes = 0;
 
-    activities.forEach((activity) => {
+    activities.forEach((activity: { averageHeartRate: number | null; duration: number | null }) => {
       if (!activity.averageHeartRate || !activity.duration) return;
 
       const duration = activity.duration / 60; // Convert to minutes
