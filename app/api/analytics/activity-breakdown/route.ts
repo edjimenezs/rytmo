@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
 import { startOfDay, subDays } from "date-fns";
-import { ActivityType } from "@prisma/client";
+
+type ActivityTypeValue =
+  | "RUNNING"
+  | "CYCLING"
+  | "SWIMMING"
+  | "WALKING"
+  | "WEIGHTLIFTING"
+  | "YOGA"
+  | "OTHER";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,11 +43,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Group by activity type
-    const groupedData = new Map<ActivityType, { value: number; count: number }>();
+    const groupedData = new Map<ActivityTypeValue, { value: number; count: number }>();
 
     activities.forEach((activity) => {
-      const existing = groupedData.get(activity.type) || { value: 0, count: 0 };
-      groupedData.set(activity.type, {
+      const type = activity.type as ActivityTypeValue;
+      const existing = groupedData.get(type) || { value: 0, count: 0 };
+      groupedData.set(type, {
         value: existing.value + (activity.distance ? activity.distance / 1000 : 0), // Convert to km
         count: existing.count + 1,
       });
