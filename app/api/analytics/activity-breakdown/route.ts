@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
     // Group by activity type
     const groupedData = new Map<ActivityTypeValue, { value: number; count: number }>();
 
-    activities.forEach((activity) => {
-      const type = activity.type as ActivityTypeValue;
+    activities.forEach((activity: { type: ActivityTypeValue; distance: number | null }) => {
+      const type = activity.type;
       const existing = groupedData.get(type) || { value: 0, count: 0 };
       groupedData.set(type, {
         value: existing.value + (activity.distance ? activity.distance / 1000 : 0), // Convert to km
