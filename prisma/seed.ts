@@ -20,6 +20,7 @@ async function main() {
       location: "Santiago, Chile",
       sportType: "Triathlon",
       experienceLevel: "Advanced",
+      defaultTrainingTime: "morning",
     },
     create: {
       userId: founder.id,
@@ -29,6 +30,7 @@ async function main() {
       location: "Santiago, Chile",
       sportType: "Triathlon",
       experienceLevel: "Advanced",
+      defaultTrainingTime: "morning",
     },
   });
 

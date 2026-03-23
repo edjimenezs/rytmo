@@ -86,6 +86,7 @@ model Profile {
   ftp         Int?    // Functional Threshold Power (watts)
   timezone    String? // IANA timezone (e.g., "America/Santiago")
   location    String? // Free-text location
+  defaultTrainingTime String? // 'morning' | 'midday' | 'evening'
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -511,6 +512,8 @@ model DailyRecommendation {
   reasoning      String?  @db.Text
   dayType        String?
   focus          String?
+  aiHeadline     String?  @db.Text
+  aiMomentTexts  Json?
   planEntryId    String?
   planEntry      TrainingPlanEntry? @relation("PlanEntryDailyRecommendations", fields: [planEntryId], references: [id])
   trainingActivityId String?
@@ -518,6 +521,7 @@ model DailyRecommendation {
   atl            Float?
   ctl            Float?
   acwr           Float?
+  feedbacks      DailyFeedback[]
   createdAt      DateTime @default(now())
 
   @@unique([userId, date])
@@ -530,12 +534,14 @@ model DailyFeedback {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   date        DateTime
-  energy      Int?
-  hunger      Int?
-  performance Int?
-  digestion   Int?
-  notes       String?
-  createdAt   DateTime @default(now())
+  energy           Int?
+  hunger           Int?
+  performance      Int?
+  digestion        Int?
+  notes            String?
+  recommendationId String?
+  recommendation   DailyRecommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
 
   @@unique([userId, date])
   @@index([userId])
