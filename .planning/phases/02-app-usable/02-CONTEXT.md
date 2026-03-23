@@ -13,6 +13,18 @@ El founder puede hacer check-in, ver el plan diario en lenguaje natural en espa�
 <decisions>
 ## Implementation Decisions
 
+### Hora de entrenamiento y mapeo de momentos
+- **Hora de entrenamiento configurable en perfil** como default (mañana/mediodía/tarde-noche). La mayoría de los entrenamientos son en horarios definidos, rara vez cambian
+- Check-in permite **override puntual** si el día es distinto al default (campo opcional, pre-llenado con el default del perfil)
+- El engine mantiene momentos abstractos (preWorkout/intraWorkout/postWorkout/dinner) — la lógica nutricional no cambia
+- **El AI phrasing mapea momentos abstractos a comidas reales** según hora de entrenamiento:
+  - Entreno mañana → pre=desayuno, post=snack media mañana, dinner=cena
+  - Entreno mediodía → pre=snack media mañana, post=almuerzo, dinner=cena
+  - Entreno tarde-noche → pre=snack de tarde, post=cena, dinner=(se fusiona con post o se omite)
+- Los acordeones del plan muestran el **nombre real de la comida** ("Almuerzo" no "Post-workout") adaptado a la hora
+- Profile schema necesita campo `defaultTrainingTime` (enum: morning/midday/evening)
+- DailyCheckin ya tiene columna `timeOfDay` (nullable) — reutilizar como override
+
 ### Tono y formato AI
 - Tono: **coach cercano**, español chileno informal con tuteo ("hoy dormiste poco, así que tu cuerpo necesita...")
 - Justificación por comida: **resumen por momento** — un párrafo de 1-2 frases al inicio de cada momento explicando el "por qué" antes de listar alimentos
@@ -89,7 +101,7 @@ El founder puede hacer check-in, ver el plan diario en lenguaje natural en espa�
 - `FeedbackForm.tsx`: Form completo con 4 campos 1-5 + notas. Adaptar layout a tap-buttons y mover inline al plan
 - `NutritionPanel.tsx`: Fetch de /api/daily-plan y render por momento. Reutilizar lógica de fetch, reescribir render (quitar macros, agregar AI text)
 - `lib/ai/llm.ts`: askLLM() ya soporta Anthropic. Arreglar modelo a claude-sonnet-4-5-20250514 o similar
-- `CheckinForm.tsx`: 5 campos mobile-first (Phase 1). No necesita cambios
+- `CheckinForm.tsx`: 5 campos mobile-first (Phase 1). Agregar campo opcional de hora de entrenamiento (override del default del perfil)
 
 ### Established Patterns
 - "use client" para componentes interactivos, server components por default
@@ -113,6 +125,8 @@ El founder puede hacer check-in, ver el plan diario en lenguaje natural en espa�
 - El "por qué" conecta: check-in del día (fatiga, sueño, tipo de entrenamiento) → decisión del engine → alimento concreto
 - Ejemplo de buen output: "Pre-entrenamiento: sesión larga de bici hoy, necesitás carbos rápidos sin peso digestivo. Opciones: Marraqueta con miel — 1 unidad, Plátano — 1 grande"
 - Ejemplo de mal output: "Pre: Marraqueta con miel (45g C, 8g P, 2g G)"
+- Ejemplo de mapeo horario bueno: entreno al mediodía → "Snack de media mañana: sesión de bici al mediodía, necesitás carbos rápidos livianos" (no "Pre-workout")
+- Ejemplo de mapeo horario bueno: entreno de noche → "Cena post-entrenamiento: recuperación después de la sesión nocturna" (fusiona post + dinner)
 
 </specifics>
 
