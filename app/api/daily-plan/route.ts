@@ -143,6 +143,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    console.error('[daily-plan] GET error:', error);
     const message = error instanceof Error ? error.message : 'Unauthorized';
     const status = message === 'Unauthorized' ? 401 : 400;
     return NextResponse.json({ error: message }, { status });
