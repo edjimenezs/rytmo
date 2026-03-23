@@ -51,6 +51,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 02-app-usable P01 | 12 | 3 tasks | 6 files |
+| Phase 02-app-usable P02 | 15 | 2 tasks | 9 files |
 | Phase 02-app-usable P03 | 8 | 2 tasks | 3 files |
 
 ## Accumulated Context
@@ -71,6 +72,10 @@ Recent decisions affecting current work:
 - [Phase 02-01]: Use deterministicFallback when AI call fails — never return null or raw JSON to client
 - [Phase 02-01]: Cache AI text in DailyRecommendation per day — generate once, read from DB on subsequent requests
 - [Phase 02-01]: trainingTime resolution: checkin.timeOfDay > profile.defaultTrainingTime > 'morning'
+- [Phase 02-02]: DailyPlanView dual fetch (checkin then plan) to distinguish empty-state from error-state
+- [Phase 02-02]: CSS max-h accordion animation instead of grid-rows — simpler cross-browser support
+- [Phase 02-02]: Dashboard page simplified to athlete-only — role routing removed from active pages
+- [Phase 02-02]: BottomNav uses CSS env() safe area — Tailwind pb-safe not available without plugin
 - [Phase 02-03]: Toggle tap-button deselection for timeOfDay: clicking active option resets to empty string (use profile default)
 - [Phase 02-03]: messageType enum pattern for feedback/checkin forms: info/success/error with matching bg color
 
@@ -85,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T20:33:31.156Z
-Stopped at: Completed 02-app-usable-03-PLAN.md
+Last session: 2026-03-23T20:35:00Z
+Stopped at: Completed 02-app-usable-02-PLAN.md (awaiting Task 3 human verify)
 Resume file: None

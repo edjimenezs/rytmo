@@ -43,9 +43,9 @@ Scope para el MVP validado personalmente. Todos están en la refactorización de
 
 ### UI & UX
 
-- [ ] **UI-01**: Home page shows today's status + quick link to check-in
-- [ ] **UI-02**: Daily plan page readable in <20 seconds
-- [ ] **UI-03**: Responsive design works on phone browser
+- [x] **UI-01**: Home page shows today's status + quick link to check-in
+- [x] **UI-02**: Daily plan page readable in <20 seconds
+- [x] **UI-03**: Responsive design works on phone browser
 - [x] **UI-04**: Error states handled gracefully (no silent failures)
 
 ---
@@ -114,9 +114,9 @@ Which phases cover which requirements. See `.planning/ROADMAP.md` for phase deta
 | REC-03 | Phase 2 — App Usable | Complete |
 | FEEDBACK-01 | Phase 2 — App Usable | Complete |
 | FEEDBACK-02 | Phase 2 — App Usable | Complete |
-| UI-01 | Phase 2 — App Usable | Pending |
-| UI-02 | Phase 2 — App Usable | Pending |
-| UI-03 | Phase 2 — App Usable | Pending |
+| UI-01 | Phase 2 — App Usable | Complete |
+| UI-02 | Phase 2 — App Usable | Complete |
+| UI-03 | Phase 2 — App Usable | Complete |
 | UI-04 | Phase 2 — App Usable | Complete |
 
 **Coverage:**
