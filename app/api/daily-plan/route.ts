@@ -4,6 +4,8 @@ import { buildNutritionPlan } from '@/lib/nutrition/engine';
 import { requireAuth } from '@/lib/auth/utils';
 import { getDailyLoads, calcularAtlCtlAcwr } from '@/lib/training/load';
 import { findTrainingPlanEntryForDate } from '@/lib/training/plan';
+import { generateMomentPhrasing, deterministicFallback, mapMomentToMealName } from '@/lib/ai/phrasing';
+import type { NutritionMoment } from '@/lib/nutrition/engine';
 
 function normalizeDate(dateString?: string) {
   const candidate = dateString ? new Date(dateString) : new Date();
@@ -46,8 +48,19 @@ export async function GET(req: NextRequest) {
         intensity: true,
         trainingType: true,
         durationMin: true,
+        timeOfDay: true,
       },
     });
+
+    const profile = await prisma.profile.findUnique({
+      where: { userId },
+      select: { defaultTrainingTime: true },
+    });
+    const trainingTime: 'morning' | 'midday' | 'evening' =
+      (checkin?.timeOfDay as 'morning' | 'midday' | 'evening' | null) ??
+      (profile?.defaultTrainingTime as 'morning' | 'midday' | 'evening' | null) ??
+      'morning';
+
     const planResponse = buildNutritionPlan({
       planEntry: planEntry ?? undefined,
       loads: { atl, ctl, acwr: Number.isFinite(acwr) ? acwr : null },
@@ -91,11 +104,39 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // AI phrasing: use cached value or generate fresh
+    let aiHeadline = plan.aiHeadline;
+    let aiMomentTexts = plan.aiMomentTexts as Record<string, string> | null;
+
+    if (!aiHeadline) {
+      const aiResult = await generateMomentPhrasing(planResponse, checkin ?? null, trainingTime);
+      const phrasing = aiResult ?? deterministicFallback(planResponse, trainingTime);
+
+      aiHeadline = phrasing.headline;
+      aiMomentTexts = phrasing.moments as Record<string, string>;
+
+      await prisma.dailyRecommendation.update({
+        where: { id: plan.id },
+        data: { aiHeadline, aiMomentTexts },
+      });
+    }
+
+    const momentMealNames = Object.fromEntries(
+      (Object.keys(planResponse.moments) as NutritionMoment[]).map((m) => [
+        m,
+        mapMomentToMealName(m, trainingTime),
+      ])
+    );
+
     return NextResponse.json({
       plan: {
         ...planResponse,
         id: plan.id,
         date: plan.date.toISOString(),
+        aiHeadline,
+        aiMomentTexts,
+        trainingTime,
+        momentMealNames,
         planEntryId: planEntry?.id ?? null,
         trainingActivityId: planEntry?.matchedActivity?.id ?? null,
         createdAt: plan.createdAt.toISOString(),
