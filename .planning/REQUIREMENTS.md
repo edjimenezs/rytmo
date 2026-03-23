@@ -93,38 +93,38 @@ Explicitly excluded to avoid scope creep.
 
 ## Traceability
 
-Which phases cover which requirements.
+Which phases cover which requirements. See `.planning/ROADMAP.md` for phase detail.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENGINE-01 | Phase 1 | Pending |
-| ENGINE-02 | Phase 1 | Pending |
-| ENGINE-03 | Phase 1 | Pending |
-| ENGINE-04 | Phase 1 | Pending |
-| FOOD-01 | Phase 1 | Pending |
-| FOOD-02 | Phase 1 | Pending |
-| FOOD-03 | Phase 1 | Pending |
-| REC-01 | Phase 2 | Pending |
-| REC-02 | Phase 2 | Pending |
-| REC-03 | Phase 2 | Pending |
-| CHECKIN-01 | Phase 1 | Pending |
-| CHECKIN-02 | Phase 1 | Pending |
-| FEEDBACK-01 | Phase 2 | Pending |
-| FEEDBACK-02 | Phase 2 | Pending |
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
-| UI-04 | Phase 2 | Pending |
+| ENGINE-01 | Phase 1 — Core Loop | Pending |
+| ENGINE-02 | Phase 1 — Core Loop | Pending |
+| ENGINE-03 | Phase 1 — Core Loop | Pending |
+| ENGINE-04 | Phase 1 — Core Loop | Pending |
+| FOOD-01 | Phase 1 — Core Loop | Pending |
+| FOOD-02 | Phase 1 — Core Loop | Pending |
+| FOOD-03 | Phase 1 — Core Loop | Pending |
+| CHECKIN-01 | Phase 1 — Core Loop | Pending |
+| CHECKIN-02 | Phase 1 — Core Loop | Pending |
+| DATA-01 | Phase 1 — Core Loop | Pending |
+| DATA-02 | Phase 1 — Core Loop | Pending |
+| DATA-03 | Phase 1 — Core Loop | Pending |
+| REC-01 | Phase 2 — App Usable | Pending |
+| REC-02 | Phase 2 — App Usable | Pending |
+| REC-03 | Phase 2 — App Usable | Pending |
+| FEEDBACK-01 | Phase 2 — App Usable | Pending |
+| FEEDBACK-02 | Phase 2 — App Usable | Pending |
+| UI-01 | Phase 2 — App Usable | Pending |
+| UI-02 | Phase 2 — App Usable | Pending |
+| UI-03 | Phase 2 — App Usable | Pending |
+| UI-04 | Phase 2 — App Usable | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
 - Mapped to phases: 20
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 after research synthesis*
+*Last updated: 2026-03-22 after roadmap creation*
