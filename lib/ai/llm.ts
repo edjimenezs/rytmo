@@ -48,7 +48,7 @@ export async function askLLM(prompt: string, options: AskOptions = {}): Promise<
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: options.model || "claude-3-5-sonnet-20240620",
+        model: options.model || "claude-sonnet-4-5-20250514",
         max_tokens: 800,
         system: options.system,
         messages: [{ role: "user", content: prompt }],
