@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import BottomNav from "@/components/layout/BottomNav";
 
 export const metadata: Metadata = {
-  title: "Streho - Health & Sports Ecosystem",
-  description: "Unified platform for athletes, coaches, and nutritionists to track training and medical data",
+  title: "RytMo - Nutrition for endurance training",
+  description:
+    "Daily fueling recommendations for endurance athletes backed by Strava, TrainingPeaks and Garmin data.",
 };
 
 export default function RootLayout({
@@ -25,10 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SessionProvider>{children}</SessionProvider>
+      <body className="min-h-screen bg-indigo-50 antialiased text-slate-900 pb-16">
+        <SessionProvider>
+          {children}
+          <BottomNav />
+        </SessionProvider>
       </body>
     </html>
   );
