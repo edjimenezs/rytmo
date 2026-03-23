@@ -22,7 +22,10 @@ El codebase ya tiene las piezas correctas (motor, check-in, feedback, Strava, au
   3. Catalogo cubre todas las combinaciones moment x focus sin fallbacks silenciosos (>=4 opciones por celda)
   4. Solo un endpoint de nutricion activo — `/api/agents/nutrition-plan` eliminado, no existe en codebase
   5. Profile del founder tiene peso, FTP y timezone correctos antes de primera ejecucion
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 01-PLAN.md — Core loop completo: form 5 campos, catalogo 45 items, wire engine, eliminar legacy, seed profile
 
 ### Phase 2: App Usable
 **Goal**: El founder puede hacer check-in, ver el plan en lenguaje natural en espanol y dejar feedback — sin ver JSON ni macros en ningun momento
@@ -54,6 +57,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Loop | 0/TBD | Not started | - |
+| 1. Core Loop | 0/1 | Planned | - |
 | 2. App Usable | 0/TBD | Not started | - |
 | 3. Validacion Personal | 0/TBD | Not started | - |
