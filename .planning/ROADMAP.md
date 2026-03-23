@@ -37,7 +37,12 @@ Plans:
   3. Founder completa 3 check-ins consecutivos sin errores de UI ni estados silenciosos
   4. Formulario de feedback accesible desde el plan del dia y datos persisten vinculados a la recomendacion
   5. App funciona en navegador movil sin layout roto
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Prisma migration (AI cache, feedback FK, training time) + AI phrasing library + daily-plan API update
+- [ ] 02-02-PLAN.md — DailyPlanView con acordeones, HomeCard, BottomNav, layout mobile-first
+- [ ] 02-03-PLAN.md — FeedbackForm tap-buttons + recommendationId, CheckinForm timeOfDay, error states
 
 ### Phase 3: Validacion Personal
 **Goal**: Datos de uso real (5-7 dias) confirman que el motor calibra bien para el perfil del founder y revelan gaps del catalogo que no eran visibles en codigo
@@ -58,5 +63,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Loop | 1/1 | COMPLETE | 2026-03-23 |
-| 2. App Usable | 0/TBD | Not started | - |
+| 2. App Usable | 0/3 | In progress | - |
 | 3. Validacion Personal | 0/TBD | Not started | - |
