@@ -25,6 +25,7 @@ const initialState = {
   intensity: 'Moderate',
   sleepHours: 7.5,
   fatigue: 3,
+  timeOfDay: '' as string, // '' means "use profile default"
 };
 
 type CheckinFormState = typeof initialState;
@@ -33,6 +34,8 @@ export default function CheckinForm() {
   const [form, setForm] = useState<CheckinFormState>(initialState);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'info' | 'error'>('info');
+  const [profileDefault, setProfileDefault] = useState<string>('');
 
   useEffect(() => {
     let active = true;
@@ -46,6 +49,7 @@ export default function CheckinForm() {
         const payload = data?.checkin;
         if (!payload) {
           setMessage('Nada guardado hoy, completa el formulario para registrar el día.');
+          setMessageType('info');
           return;
         }
         setForm((prev) => ({
@@ -56,14 +60,30 @@ export default function CheckinForm() {
           intensity: payload.intensity ?? prev.intensity,
           sleepHours: payload.sleepHours ?? prev.sleepHours,
           fatigue: payload.fatigue ?? prev.fatigue,
+          timeOfDay: payload.timeOfDay ?? prev.timeOfDay,
         }));
         setMessage('Datos cargados. Puedes actualizar y guardar de nuevo.');
+        setMessageType('info');
       })
       .catch(() => {
-        if (active) setMessage('Sin check-in previo para hoy.');
+        if (active) {
+          setMessage('Sin check-in previo para hoy.');
+          setMessageType('info');
+        }
       });
 
-    return () => { active = false; };
+    // Fetch profile default training time
+    fetch('/api/daily-plan')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!active || !data?.plan?.trainingTime) return;
+        setProfileDefault(data.plan.trainingTime);
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -78,6 +98,7 @@ export default function CheckinForm() {
       intensity: form.trainingType === 'rest' ? null : form.intensity,
       sleepHours: form.sleepHours,
       fatigue: form.fatigue,
+      timeOfDay: form.timeOfDay || null,
     };
 
     try {
@@ -88,9 +109,11 @@ export default function CheckinForm() {
       });
       if (!response.ok) throw new Error('No se pudo guardar el check-in');
       setMessage('Check-in guardado correctamente.');
+      setMessageType('info');
     } catch (error) {
       console.error(error);
       setMessage('Error al guardar el check-in. Intenta de nuevo.');
+      setMessageType('error');
     } finally {
       setSaving(false);
     }
@@ -106,7 +129,13 @@ export default function CheckinForm() {
       </header>
 
       {message && (
-        <div className="rounded-2xl bg-blue-50 px-4 py-2 text-sm text-blue-800">{message}</div>
+        <div
+          className={`rounded-2xl px-4 py-2 text-sm ${
+            messageType === 'error' ? 'bg-red-50 text-red-800' : 'bg-blue-50 text-blue-800'
+          }`}
+        >
+          {message}
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -190,7 +219,53 @@ export default function CheckinForm() {
           </div>
         )}
 
-        {/* Campo 4: Sueño */}
+        {/* Campo 4: Hora de entrenamiento (oculto si descanso) */}
+        {!isRest && (
+          <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              Hora de entrenamiento de hoy
+            </p>
+            <p className="text-xs text-gray-400">
+              Opcional — solo si es diferente a tu default
+              {profileDefault
+                ? ` (${
+                    profileDefault === 'morning'
+                      ? 'manana'
+                      : profileDefault === 'midday'
+                        ? 'mediodia'
+                        : 'tarde-noche'
+                  })`
+                : ''}
+            </p>
+            <div className="flex gap-2">
+              {[
+                { label: 'Manana', value: 'morning' },
+                { label: 'Mediodia', value: 'midday' },
+                { label: 'Tarde-noche', value: 'evening' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      timeOfDay: prev.timeOfDay === opt.value ? '' : opt.value,
+                    }))
+                  }
+                  className={`min-h-[44px] flex-1 rounded-xl text-sm font-semibold transition-colors ${
+                    form.timeOfDay === opt.value
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Campo 5: Sueño */}
         <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-gray-700">Horas de sueño</p>
@@ -211,7 +286,7 @@ export default function CheckinForm() {
           </div>
         </div>
 
-        {/* Campo 5: Fatiga */}
+        {/* Campo 6: Fatiga */}
         <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
           <p className="text-sm font-semibold text-gray-700">Fatiga <span className="text-gray-400 font-normal">(1=fresh, 5=destruido)</span></p>
           <div className="flex gap-2">
