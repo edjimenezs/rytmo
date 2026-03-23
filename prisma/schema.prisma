@@ -33,51 +33,62 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts              Account[]
-  sessions              Session[]
-  profile               Profile?
-  medicalDocuments      MedicalDocument[]
-  trainingActivities    TrainingActivity[]
-  manualEntries         ManualTrainingEntry[]
+  accounts             Account[]
+  sessions             Session[]
+  profile              Profile?
+  medicalDocuments     MedicalDocument[]
+  trainingActivities   TrainingActivity[]
+  manualEntries        ManualTrainingEntry[]
+  dailyCheckins        DailyCheckin[]
+  dailyRecommendations DailyRecommendation[]
+  dailyFeedback        DailyFeedback[]
 
   // As athlete
-  coaches               CoachAthlete[]        @relation("AthleteCoaches")
-  nutritionists         NutritionistClient[]  @relation("ClientNutritionists")
+  coaches       CoachAthlete[]       @relation("AthleteCoaches")
+  nutritionists NutritionistClient[] @relation("ClientNutritionists")
 
   // As coach
-  athletes              CoachAthlete[]        @relation("CoachAthletes")
-  coachNotes            CoachNote[]
+  athletes   CoachAthlete[] @relation("CoachAthletes")
+  coachNotes CoachNote[]
 
   // As nutritionist
-  clients               NutritionistClient[]  @relation("NutritionistClients")
-  nutritionNotes        NutritionNote[]
+  clients        NutritionistClient[] @relation("NutritionistClients")
+  nutritionNotes NutritionNote[]
 
   // Strava integration
-  stravaIntegration     StravaIntegration?
+  stravaIntegration StravaIntegration?
+  trainingPlanEntries TrainingPlanEntry[] @relation("UserTrainingPlanEntries")
+  trainingPeaksIntegration TrainingPeaksIntegration?
+  garminIntegration GarminIntegration?
 
   @@index([email])
   @@index([role])
 }
 
 model Profile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Personal info
-  dateOfBirth     DateTime?
-  gender          String?
-  height          Float?    // in cm
-  weight          Float?    // in kg
-  phone           String?
+  dateOfBirth DateTime?
+  gender      String?
+  height      Float? // in cm
+  weight      Float? // in kg
+  phone       String?
 
   // Sports info
-  sportType       String?   // e.g., "Running", "Cycling", "Triathlon"
-  experienceLevel String?   // e.g., "Beginner", "Intermediate", "Advanced"
-  goals           String?   // Text description of goals
+  sportType       String? // e.g., "Running", "Cycling", "Triathlon"
+  experienceLevel String? // e.g., "Beginner", "Intermediate", "Advanced"
+  goals           String? // Text description of goals
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  // Performance & location
+  ftp         Int?    // Functional Threshold Power (watts)
+  timezone    String? // IANA timezone (e.g., "America/Santiago")
+  location    String? // Free-text location
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -134,22 +145,22 @@ enum DocumentType {
 }
 
 model MedicalDocument {
-  id          String       @id @default(cuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title       String
   description String?
   type        DocumentType
-  fileUrl     String       // S3 or storage URL
+  fileUrl     String // S3 or storage URL
   fileName    String
-  fileSize    Int          // in bytes
+  fileSize    Int // in bytes
   mimeType    String
 
   // Metadata
-  testDate    DateTime?    // Date the test/exam was performed
-  uploadedAt  DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  testDate   DateTime? // Date the test/exam was performed
+  uploadedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Analysis
   extractedText String?    @db.Text // Extracted text from PDF/image
@@ -164,22 +175,22 @@ model MedicalDocument {
 
 // Extracted lab values from medical documents
 model LabValue {
-  id          String    @id @default(cuid())
-  documentId  String
-  document    MedicalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  userId      String
+  id         String          @id @default(cuid())
+  documentId String
+  document   MedicalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
 
   // Lab test information
-  testName    String    // e.g., "Hemoglobina", "Glucosa", "Colesterol Total"
-  value       Float     // Numeric value
-  unit        String?   // e.g., "g/dL", "mg/dL", "mmol/L"
+  testName       String // e.g., "Hemoglobina", "Glucosa", "Colesterol Total"
+  value          Float // Numeric value
+  unit           String? // e.g., "g/dL", "mg/dL", "mmol/L"
   referenceRange String? // e.g., "12.0-16.0 g/dL"
-  status      String?   // "NORMAL", "ALTO", "BAJO", "CRÍTICO"
-  testDate    DateTime? // Date from the document
-  
+  status         String? // "NORMAL", "ALTO", "BAJO", "CRÍTICO"
+  testDate       DateTime? // Date from the document
+
   // Metadata
-  extractedAt DateTime  @default(now())
-  
+  extractedAt DateTime @default(now())
+
   @@index([documentId])
   @@index([userId])
   @@index([testName])
@@ -205,63 +216,94 @@ enum ActivitySource {
   STRAVA
   TRAINING_PEAKS
   OTHER_APP
+  GARMIN
 }
 
 // Generic training activity (from any source)
 model TrainingActivity {
-  id              String         @id @default(cuid())
-  userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Activity details
-  name            String
-  type            ActivityType
-  source          ActivitySource @default(MANUAL)
-  externalId      String?        // ID from external service (e.g., Strava)
+  name       String
+  type       ActivityType
+  source     ActivitySource @default(MANUAL)
+  externalId String? // ID from external service (e.g., Strava)
 
   // Metrics
-  distance        Float?         // in meters
-  duration        Int?           // in seconds
-  elevation       Float?         // in meters
-  calories        Int?
+  distance         Float? // in meters
+  duration         Int? // in seconds
+  elevation        Float? // in meters
+  calories         Int?
   averageHeartRate Int?
-  maxHeartRate    Int?
-  averagePace     Float?         // in min/km
+  maxHeartRate     Int?
+  averagePace      Float? // in min/km
 
   // Timing
-  startDate       DateTime
-  endDate         DateTime?
+  startDate DateTime
+  endDate   DateTime?
 
   // Additional data
-  description     String?
-  notes           String?
+  description String?
+  notes       String?
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  trainingPlanMatches TrainingPlanEntry[] @relation("TrainingPlanMatches")
+  dailyRecommendations DailyRecommendation[] @relation("TrainingActivityDailyRecommendations")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([startDate])
   @@index([type])
   @@index([source])
   @@index([externalId])
+  @@unique([userId, externalId, source])
+}
+
+model TrainingPlanEntry {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation("UserTrainingPlanEntries", fields: [userId], references: [id], onDelete: Cascade)
+  date              DateTime
+  sessionType       String
+  title             String
+  durationMinutes   Float?
+  distanceKm        Float?
+  tss               Float?
+  notes             String?
+  matchedActivityId String?
+  matchedActivity   TrainingActivity?  @relation("TrainingPlanMatches", fields: [matchedActivityId], references: [id])
+  dayType           String             @default("rest")
+  requiresIntraFuel Boolean            @default(false)
+  focus             String?
+  dailyRecommendations DailyRecommendation[] @relation("PlanEntryDailyRecommendations")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@unique([userId, date, sessionType])
 }
 
 // Manual training entries (before Strava sync)
 model ManualTrainingEntry {
-  id          String       @id @default(cuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title       String
-  type        ActivityType
-  date        DateTime
-  duration    Int?         // in minutes
-  distance    Float?       // in km
-  intensity   String?      // "Low", "Medium", "High"
-  notes       String?
+  title     String
+  type      ActivityType
+  date      DateTime
+  duration  Int? // in minutes
+  distance  Float? // in km
+  intensity String? // "Low", "Medium", "High"
+  notes     String?
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([date])
@@ -272,20 +314,52 @@ model ManualTrainingEntry {
 // ============================================
 
 model StravaIntegration {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  stravaUserId    String
-  accessToken     String
-  refreshToken    String
-  expiresAt       DateTime
-  scope           String
+  stravaUserId String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String
 
-  lastSyncAt      DateTime?
+  lastSyncAt DateTime?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model TrainingPeaksIntegration {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalUserId String
+  accessToken    String
+  refreshToken   String
+  expiresAt      DateTime
+  lastSyncAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model GarminIntegration {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalUserId String
+  accessToken    String
+  refreshToken   String
+  expiresAt      DateTime
+  lastSyncAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -301,16 +375,16 @@ enum RelationshipStatus {
 }
 
 model CoachAthlete {
-  id         String             @id @default(cuid())
-  coachId    String
-  coach      User               @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId  String
-  athlete    User               @relation("AthleteCoaches", fields: [athleteId], references: [id], onDelete: Cascade)
+  id        String @id @default(cuid())
+  coachId   String
+  coach     User   @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   User   @relation("AthleteCoaches", fields: [athleteId], references: [id], onDelete: Cascade)
 
-  status     RelationshipStatus @default(PENDING)
+  status RelationshipStatus @default(PENDING)
 
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([coachId, athleteId])
   @@index([coachId])
@@ -319,17 +393,17 @@ model CoachAthlete {
 }
 
 model CoachNote {
-  id         String   @id @default(cuid())
-  coachId    String
-  coach      User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId  String
+  id        String @id @default(cuid())
+  coachId   String
+  coach     User   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String
 
-  title      String
-  content    String   @db.Text
-  isPrivate  Boolean  @default(false) // Private notes only coach can see
+  title     String
+  content   String  @db.Text
+  isPrivate Boolean @default(false) // Private notes only coach can see
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([coachId])
   @@index([athleteId])
@@ -341,16 +415,16 @@ model CoachNote {
 // ============================================
 
 model NutritionistClient {
-  id              String             @id @default(cuid())
-  nutritionistId  String
-  nutritionist    User               @relation("NutritionistClients", fields: [nutritionistId], references: [id], onDelete: Cascade)
-  clientId        String
-  client          User               @relation("ClientNutritionists", fields: [clientId], references: [id], onDelete: Cascade)
+  id             String @id @default(cuid())
+  nutritionistId String
+  nutritionist   User   @relation("NutritionistClients", fields: [nutritionistId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         User   @relation("ClientNutritionists", fields: [clientId], references: [id], onDelete: Cascade)
 
-  status          RelationshipStatus @default(PENDING)
+  status RelationshipStatus @default(PENDING)
 
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([nutritionistId, clientId])
   @@index([nutritionistId])
@@ -359,19 +433,111 @@ model NutritionistClient {
 }
 
 model NutritionNote {
-  id              String   @id @default(cuid())
-  nutritionistId  String
-  nutritionist    User     @relation(fields: [nutritionistId], references: [id], onDelete: Cascade)
-  clientId        String
+  id             String @id @default(cuid())
+  nutritionistId String
+  nutritionist   User   @relation(fields: [nutritionistId], references: [id], onDelete: Cascade)
+  clientId       String
 
-  title           String
-  content         String   @db.Text
-  isPrivate       Boolean  @default(false) // Private notes only nutritionist can see
+  title     String
+  content   String  @db.Text
+  isPrivate Boolean @default(false) // Private notes only nutritionist can see
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([nutritionistId])
   @@index([clientId])
   @@index([createdAt])
+}
+
+model FoodItem {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  carbs     Float
+  protein   Float
+  fat       Float
+  kcal      Float
+  portion   String
+  isQuick   Boolean  @default(false)
+  isLight   Boolean  @default(false)
+  isPre     Boolean  @default(false)
+  isPost    Boolean  @default(false)
+  isIntra   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model DailyCheckin {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime
+  sleepHours   Float?
+  sleepQuality Int?
+  fatigue      Int?
+  hunger       Int?
+  stress       Int?
+  trainingType String?
+  durationMin  Int?
+  intensity    String?
+  timeOfDay    String?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+model DailyRecommendation {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime
+  summary        String   @db.Text
+  breakfast      String?  @db.Text
+  preWorkout     String?  @db.Text
+  preWorkoutFoods Json?
+  intraWorkout   String?  @db.Text
+  intraWorkoutFoods Json?
+  postWorkout    String?  @db.Text
+  postWorkoutFoods Json?
+  lunch          String?  @db.Text
+  snack          String?  @db.Text
+  dinner         String?  @db.Text
+  dinnerFoods Json?
+  rationale      String?  @db.Text
+  foodReferences String?  @db.Text
+  reasoning      String?  @db.Text
+  dayType        String?
+  focus          String?
+  planEntryId    String?
+  planEntry      TrainingPlanEntry? @relation("PlanEntryDailyRecommendations", fields: [planEntryId], references: [id])
+  trainingActivityId String?
+  trainingActivity   TrainingActivity? @relation("TrainingActivityDailyRecommendations", fields: [trainingActivityId], references: [id])
+  atl            Float?
+  ctl            Float?
+  acwr           Float?
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+model DailyFeedback {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  energy      Int?
+  hunger      Int?
+  performance Int?
+  digestion   Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
 }
