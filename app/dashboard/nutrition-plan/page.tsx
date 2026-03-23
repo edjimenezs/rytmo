@@ -4,7 +4,6 @@ import { UserRole } from "@prisma/client";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import NutritionPanel from "@/components/dashboard/NutritionPanel";
 import TrainingPlanPanel from "@/components/dashboard/TrainingPlanPanel";
-import NutritionAgentPanel from "@/components/dashboard/NutritionAgentPanel";
 
 export default async function NutritionPlanPage() {
   const user = await getCurrentUser();
@@ -13,7 +12,7 @@ export default async function NutritionPlanPage() {
     redirect("/auth/login");
   }
 
-  const userRole = (user as any).role as UserRole;
+  const userRole = user.role ?? UserRole.ATHLETE;
 
   if (userRole !== UserRole.ATHLETE) {
     redirect("/dashboard");
@@ -30,8 +29,6 @@ export default async function NutritionPlanPage() {
           </div>
 
           <NutritionPanel />
-
-          <NutritionAgentPanel />
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Asistencia del nutriólogo</h3>
