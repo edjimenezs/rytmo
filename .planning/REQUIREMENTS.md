@@ -24,9 +24,9 @@ Scope para el MVP validado personalmente. Todos están en la refactorización de
 
 ### Recommendation Output
 
-- [ ] **REC-01**: Daily recommendation output includes: day summary, 4 moment-specific food suggestions, brief reasoning
-- [ ] **REC-02**: Recommendations show **concrete food, not macros** (e.g., "banana + yogurt", not "23g carbs + 10g protein")
-- [ ] **REC-03**: AI phrasing layer (natural language wrapper, not logic layer)
+- [x] **REC-01**: Daily recommendation output includes: day summary, 4 moment-specific food suggestions, brief reasoning
+- [x] **REC-02**: Recommendations show **concrete food, not macros** (e.g., "banana + yogurt", not "23g carbs + 10g protein")
+- [x] **REC-03**: AI phrasing layer (natural language wrapper, not logic layer)
 
 ### Check-in & Feedback
 
@@ -109,9 +109,9 @@ Which phases cover which requirements. See `.planning/ROADMAP.md` for phase deta
 | DATA-01 | Phase 1 — Core Loop | Complete |
 | DATA-02 | Phase 1 — Core Loop | Complete |
 | DATA-03 | Phase 1 — Core Loop | Complete |
-| REC-01 | Phase 2 — App Usable | Pending |
-| REC-02 | Phase 2 — App Usable | Pending |
-| REC-03 | Phase 2 — App Usable | Pending |
+| REC-01 | Phase 2 — App Usable | Complete |
+| REC-02 | Phase 2 — App Usable | Complete |
+| REC-03 | Phase 2 — App Usable | Complete |
 | FEEDBACK-01 | Phase 2 — App Usable | Pending |
 | FEEDBACK-02 | Phase 2 — App Usable | Pending |
 | UI-01 | Phase 2 — App Usable | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-03-23T19:35:57.524Z"
+stopped_at: Completed 02-app-usable-01-PLAN.md
+last_updated: "2026-03-23T20:17:35.944Z"
 last_activity: 2026-03-23 — Plan 01 complete, checkpoint approved by founder
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 4
+  completed_plans: 2
   percent: 100
 ---
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 02-app-usable P01 | 12 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - [01-01]: CheckinInput desacoplado de Prisma DailyCheckin — engine independiente de DB types
 - [01-01]: resolveCheckinModifiers como función pura para testabilidad
 - [01-01]: Fatigue threshold corregido de >= 7 a >= 4 (escala es 1-5, no 1-10)
+- [Phase 02-01]: Use deterministicFallback when AI call fails — never return null or raw JSON to client
+- [Phase 02-01]: Cache AI text in DailyRecommendation per day — generate once, read from DB on subsequent requests
+- [Phase 02-01]: trainingTime resolution: checkin.timeOfDay > profile.defaultTrainingTime > 'morning'
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T19:35:57.522Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-app-usable/02-UI-SPEC.md
+Last session: 2026-03-23T20:17:35.942Z
+Stopped at: Completed 02-app-usable-01-PLAN.md
+Resume file: None

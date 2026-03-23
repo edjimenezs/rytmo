@@ -37,7 +37,7 @@ Plans:
   3. Founder completa 3 check-ins consecutivos sin errores de UI ni estados silenciosos
   4. Formulario de feedback accesible desde el plan del dia y datos persisten vinculados a la recomendacion
   5. App funciona en navegador movil sin layout roto
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 02-01-PLAN.md — Prisma migration (AI cache, feedback FK, training time) + AI phrasing library + daily-plan API update
@@ -63,5 +63,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Loop | 1/1 | COMPLETE | 2026-03-23 |
-| 2. App Usable | 0/3 | In progress | - |
+| 2. App Usable | 1/3 | In Progress|  |
 | 3. Validacion Personal | 0/TBD | Not started | - |
