@@ -97,18 +97,18 @@ Which phases cover which requirements. See `.planning/ROADMAP.md` for phase deta
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENGINE-01 | Phase 1 — Core Loop | Pending |
-| ENGINE-02 | Phase 1 — Core Loop | Pending |
-| ENGINE-03 | Phase 1 — Core Loop | Pending |
-| ENGINE-04 | Phase 1 — Core Loop | Pending |
-| FOOD-01 | Phase 1 — Core Loop | Pending |
-| FOOD-02 | Phase 1 — Core Loop | Pending |
-| FOOD-03 | Phase 1 — Core Loop | Pending |
-| CHECKIN-01 | Phase 1 — Core Loop | Pending |
-| CHECKIN-02 | Phase 1 — Core Loop | Pending |
-| DATA-01 | Phase 1 — Core Loop | Pending |
-| DATA-02 | Phase 1 — Core Loop | Pending |
-| DATA-03 | Phase 1 — Core Loop | Pending |
+| ENGINE-01 | Phase 1 — Core Loop | Complete |
+| ENGINE-02 | Phase 1 — Core Loop | Complete |
+| ENGINE-03 | Phase 1 — Core Loop | Complete |
+| ENGINE-04 | Phase 1 — Core Loop | Complete |
+| FOOD-01 | Phase 1 — Core Loop | Complete |
+| FOOD-02 | Phase 1 — Core Loop | Complete |
+| FOOD-03 | Phase 1 — Core Loop | Complete |
+| CHECKIN-01 | Phase 1 — Core Loop | Complete |
+| CHECKIN-02 | Phase 1 — Core Loop | Complete |
+| DATA-01 | Phase 1 — Core Loop | Complete |
+| DATA-02 | Phase 1 — Core Loop | Complete |
+| DATA-03 | Phase 1 — Core Loop | Complete |
 | REC-01 | Phase 2 — App Usable | Pending |
 | REC-02 | Phase 2 — App Usable | Pending |
 | REC-03 | Phase 2 — App Usable | Pending |
