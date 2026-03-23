@@ -32,8 +32,8 @@ Scope para el MVP validado personalmente. Todos están en la refactorización de
 
 - [x] **CHECKIN-01**: Daily check-in captures training (type, duration, intensity, time) + state (sleep hours, fatigue 1-5)
 - [x] **CHECKIN-02**: Check-in completes in under 60 seconds, mobile-friendly
-- [ ] **FEEDBACK-01**: Post-session feedback captures energy, hunger, digestion, performance (1-5 scale)
-- [ ] **FEEDBACK-02**: Feedback stored, linked to day's recommendation, available for founder review
+- [x] **FEEDBACK-01**: Post-session feedback captures energy, hunger, digestion, performance (1-5 scale)
+- [x] **FEEDBACK-02**: Feedback stored, linked to day's recommendation, available for founder review
 
 ### Data Integrity
 
@@ -46,7 +46,7 @@ Scope para el MVP validado personalmente. Todos están en la refactorización de
 - [ ] **UI-01**: Home page shows today's status + quick link to check-in
 - [ ] **UI-02**: Daily plan page readable in <20 seconds
 - [ ] **UI-03**: Responsive design works on phone browser
-- [ ] **UI-04**: Error states handled gracefully (no silent failures)
+- [x] **UI-04**: Error states handled gracefully (no silent failures)
 
 ---
 
@@ -112,12 +112,12 @@ Which phases cover which requirements. See `.planning/ROADMAP.md` for phase deta
 | REC-01 | Phase 2 — App Usable | Complete |
 | REC-02 | Phase 2 — App Usable | Complete |
 | REC-03 | Phase 2 — App Usable | Complete |
-| FEEDBACK-01 | Phase 2 — App Usable | Pending |
-| FEEDBACK-02 | Phase 2 — App Usable | Pending |
+| FEEDBACK-01 | Phase 2 — App Usable | Complete |
+| FEEDBACK-02 | Phase 2 — App Usable | Complete |
 | UI-01 | Phase 2 — App Usable | Pending |
 | UI-02 | Phase 2 — App Usable | Pending |
 | UI-03 | Phase 2 — App Usable | Pending |
-| UI-04 | Phase 2 — App Usable | Pending |
+| UI-04 | Phase 2 — App Usable | Complete |
 
 **Coverage:**
 - v1 requirements: 20 total
