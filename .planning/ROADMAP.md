@@ -6,7 +6,7 @@ El codebase ya tiene las piezas correctas (motor, check-in, feedback, Strava, au
 
 ## Phases
 
-- [ ] **Phase 1: Core Loop** - Eliminar motor legacy, conectar check-in al engine, expandir catalogo, seed profile
+- [x] **Phase 1: Core Loop** - Eliminar motor legacy, conectar check-in al engine, expandir catalogo, seed profile
 - [ ] **Phase 2: App Usable** - AI phrasing, PlanView UI, feedback end-to-end, validacion de inputs
 - [ ] **Phase 3: Validacion Personal** - 5-7 dias de uso real, calibrar thresholds, decidir v2
 
@@ -25,7 +25,7 @@ El codebase ya tiene las piezas correctas (motor, check-in, feedback, Strava, au
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-PLAN.md — Core loop completo: form 5 campos, catalogo 45 items, wire engine, eliminar legacy, seed profile
+- [x] 01-PLAN.md — Core loop completo: form 5 campos, catalogo 45 items, wire engine, eliminar legacy, seed profile
 
 ### Phase 2: App Usable
 **Goal**: El founder puede hacer check-in, ver el plan en lenguaje natural en espanol y dejar feedback — sin ver JSON ni macros en ningun momento
@@ -57,6 +57,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Loop | 0/1 | Planned | - |
+| 1. Core Loop | 1/1 | Awaiting verification | 2026-03-23 |
 | 2. App Usable | 0/TBD | Not started | - |
 | 3. Validacion Personal | 0/TBD | Not started | - |
