@@ -53,7 +53,11 @@ Plans:
   2. Al menos 3 dias con feedback de energia >= 3/5 (plan esta siendo util)
   3. Thresholds TSS revisados contra datos reales de Strava — ajustados si necesario y documentados en PROJECT.md
   4. Founder toma decision informada sobre que construir en v2 (backlog priorizado)
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Trends API + FeedbackTrendsChart + wire into DailyPlanView (mini grafico energia/performance)
+- [ ] 03-02-PLAN.md — Script CLI de calibracion thresholds + closure doc template
 
 ## Progress
 
@@ -64,4 +68,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Core Loop | 1/1 | COMPLETE | 2026-03-23 |
 | 2. App Usable | 1/3 | In Progress|  |
-| 3. Validacion Personal | 0/TBD | Not started | - |
+| 3. Validacion Personal | 0/2 | Not started | - |
