@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
           date: normalizedDate,
         },
       },
-      update: payload,
+      update: { ...payload, aiHeadline: null, aiMomentTexts: null },
       create: {
         userId,
         date: normalizedDate,
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // AI phrasing: use cached value or generate fresh
+    // AI phrasing: always regenerate (cleared on update above)
     let aiHeadline = plan.aiHeadline;
     let aiMomentTexts = plan.aiMomentTexts as Record<string, string> | null;
 

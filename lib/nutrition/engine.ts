@@ -86,21 +86,39 @@ export type NutritionPlanResponse = {
   moments: Record<NutritionMoment, NutritionMomentPlan>;
 };
 
-const canonicalDayType = (planEntry?: NutritionPlanEntry): string => {
-  if (!planEntry) return "rest";
-  return planEntry.dayType ?? "moderate";
+function dayTypeFromCheckin(checkin?: CheckinInput): string {
+  if (!checkin?.trainingType || checkin.trainingType === 'rest') return 'rest';
+  const dur = checkin.durationMin ?? 0;
+  const intensity = (checkin.intensity ?? '').toLowerCase();
+  if (intensity === 'high' || dur >= 90) return 'high';
+  if (intensity === 'moderate' || dur >= 45) return 'moderate';
+  if (dur > 0) return 'low';
+  return 'rest';
+}
+
+const canonicalDayType = (planEntry?: NutritionPlanEntry, checkin?: CheckinInput): string => {
+  if (planEntry) return planEntry.dayType ?? "moderate";
+  // No training plan entry — derive from check-in data
+  return dayTypeFromCheckin(checkin);
 };
 
-const pickFoods = (moment: NutritionMoment, focus: string | null): FoodOption[] => {
+const pickFoods = (moment: NutritionMoment, focus: string | null, daySeed: number = 0): FoodOption[] => {
   const candidates = foodCatalog.filter((option) => {
     if (option.moment !== moment) return false;
     if (focus && !option.focus.includes(focus)) return false;
     return true;
   });
-  if (candidates.length === 0) {
-    return foodCatalog.filter((option) => option.moment === moment).slice(0, 2);
+  const pool = candidates.length > 0
+    ? candidates
+    : foodCatalog.filter((option) => option.moment === moment);
+  if (pool.length <= 2) return pool;
+  // Rotate selection based on day seed so different days get different foods
+  const offset = daySeed % pool.length;
+  const picked: FoodOption[] = [];
+  for (let i = 0; i < 2; i++) {
+    picked.push(pool[(offset + i) % pool.length]);
   }
-  return candidates.slice(0, 2);
+  return picked;
 };
 
 const describeFoods = (foods: FoodOption[]) =>
@@ -120,7 +138,7 @@ export function buildNutritionPlan(params: {
 }) {
   const { planEntry, loads } = params;
 
-  const baseDayType = canonicalDayType(planEntry);
+  const baseDayType = canonicalDayType(planEntry, params.checkin);
   const baseFocus = planEntry?.focus ?? (baseDayType === "rest" ? "maintenance" : null);
   const baseRequiresIntra = !!planEntry?.requiresIntraFuel || baseDayType === "high";
 
@@ -131,10 +149,14 @@ export function buildNutritionPlan(params: {
 
   const entryLabel = sessionLabel(planEntry);
 
-  const preFoods = pickFoods("preWorkout", focus);
-  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus) : [];
-  const postFoods = pickFoods("postWorkout", focus);
-  const dinnerFoods = pickFoods("dinner", focus);
+  // Day-based seed for food rotation (different foods each day)
+  const today = new Date();
+  const daySeed = today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate();
+
+  const preFoods = pickFoods("preWorkout", focus, daySeed);
+  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus, daySeed) : [];
+  const postFoods = pickFoods("postWorkout", focus, daySeed);
+  const dinnerFoods = pickFoods("dinner", focus, daySeed);
 
   const summary = planEntry
     ? `Hoy la sesión es ${entryLabel} con una carga ${dayType}.`
@@ -184,7 +206,7 @@ export function buildNutritionPlan(params: {
       preWorkout: buildMoment("preWorkout", preFoods),
       intraWorkout: buildMoment("intraWorkout", intraFoods),
       postWorkout: buildMoment("postWorkout", postFoods),
-      snack: buildMoment("snack", pickFoods("snack", focus)),
+      snack: buildMoment("snack", pickFoods("snack", focus, daySeed)),
       dinner: buildMoment("dinner", dinnerFoods),
     },
   };
