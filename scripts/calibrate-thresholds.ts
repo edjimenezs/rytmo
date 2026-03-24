@@ -1,3 +1,4 @@
+// Run: npx ts-node -r tsconfig-paths/register --project tsconfig.scripts.json scripts/calibrate-thresholds.ts --email=founder@example.com [--days=14]
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { estimarTssDesdeFc } from '../lib/training/load';
