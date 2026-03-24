@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-24T12:46:13.238Z"
+stopped_at: Completed 03-02-PLAN.md — calibration script and closure template
+last_updated: "2026-03-24T12:47:07.491Z"
 last_activity: 2026-03-23 — Plan 02 complete, founder approved mobile UI (BottomNav, accordions, HomeCard)
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 100
 ---
 
@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 | Phase 02-app-usable P02 | 15 | 2 tasks | 9 files |
 | Phase 02-app-usable P03 | 8 | 2 tasks | 3 files |
 | Phase 03-validacion-personal P01 | 2 | 3 tasks | 3 files |
+| Phase 03-validacion-personal P02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Recent decisions affecting current work:
 - [Phase 02-03]: messageType enum pattern for feedback/checkin forms: info/success/error with matching bg color
 - [Phase 03-01]: Trends fetch is non-blocking — plan renders even if /api/feedback/trends fails (silent .catch)
 - [Phase 03-01]: 3-point minimum guard on chart — fewer points is noise, not signal
+- [Phase 03-validacion-personal]: Use local new PrismaClient() in CLI scripts instead of globalThis singleton from lib/prisma
+- [Phase 03-validacion-personal]: Add tsconfig.scripts.json with commonjs + node moduleResolution so ts-node can resolve @/* aliases via tsconfig-paths
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T12:46:13.236Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-24T12:47:07.488Z
+Stopped at: Completed 03-02-PLAN.md — calibration script and closure template
 Resume file: None

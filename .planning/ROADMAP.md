@@ -8,7 +8,7 @@ El codebase ya tiene las piezas correctas (motor, check-in, feedback, Strava, au
 
 - [x] **Phase 1: Core Loop** - Eliminar motor legacy, conectar check-in al engine, expandir catalogo, seed profile
 - [ ] **Phase 2: App Usable** - AI phrasing, PlanView UI, feedback end-to-end, validacion de inputs
-- [ ] **Phase 3: Validacion Personal** - 5-7 dias de uso real, calibrar thresholds, decidir v2
+- [x] **Phase 3: Validacion Personal** - 5-7 dias de uso real, calibrar thresholds, decidir v2 (completed 2026-03-24)
 
 ## Phase Details
 
@@ -53,7 +53,7 @@ Plans:
   2. Al menos 3 dias con feedback de energia >= 3/5 (plan esta siendo util)
   3. Thresholds TSS revisados contra datos reales de Strava — ajustados si necesario y documentados en PROJECT.md
   4. Founder toma decision informada sobre que construir en v2 (backlog priorizado)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 03-01-PLAN.md — Trends API + FeedbackTrendsChart + wire into DailyPlanView (mini grafico energia/performance)
@@ -68,4 +68,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Core Loop | 1/1 | COMPLETE | 2026-03-23 |
 | 2. App Usable | 1/3 | In Progress|  |
-| 3. Validacion Personal | 0/2 | Not started | - |
+| 3. Validacion Personal | 2/2 | Complete   | 2026-03-24 |
