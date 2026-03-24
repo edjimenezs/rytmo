@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import MomentAccordion from '@/components/nutrition/MomentAccordion';
+import FeedbackTrendsChart from '@/components/nutrition/FeedbackTrendsChart';
 
 type FoodItem = {
   name: string;
@@ -23,6 +24,8 @@ type PlanData = {
   date: string;
 };
 
+type TrendPoint = { date: string; energia: number | null; performance: number | null };
+
 const momentOrder = ['preWorkout', 'intraWorkout', 'postWorkout', 'dinner'] as const;
 const iconMap = {
   preWorkout: 'sun',
@@ -37,6 +40,7 @@ export default function DailyPlanView() {
   const [error, setError] = useState<string | null>(null);
   const [hasCheckin, setHasCheckin] = useState<boolean>(true);
   const [openMoment, setOpenMoment] = useState<string>('preWorkout');
+  const [trends, setTrends] = useState<TrendPoint[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -75,6 +79,14 @@ export default function DailyPlanView() {
         if (!active) return;
 
         setPlan(data.plan);
+
+        // Non-blocking trends fetch (after setPlan)
+        fetch('/api/feedback/trends?days=7')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (active && data?.count >= 3) setTrends(data.trends);
+          })
+          .catch(() => {}); // trends are complementary, not critical
       } catch {
         if (active) setError('No pudimos cargar tu plan.');
       } finally {
@@ -178,6 +190,8 @@ export default function DailyPlanView() {
           );
         })}
       </div>
+
+      {trends.length >= 3 && <FeedbackTrendsChart data={trends} />}
 
       <Link
         href="/feedback"
