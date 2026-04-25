@@ -350,14 +350,14 @@ model TrainingPeaksIntegration {
 }
 
 model GarminIntegration {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  externalUserId String
-  accessToken    String
-  refreshToken   String
-  expiresAt      DateTime
-  lastSyncAt     DateTime?
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  profileId   Int
+  oauth1Token Json
+  oauth2Token Json
+  lastSyncAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

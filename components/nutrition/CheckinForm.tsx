@@ -30,40 +30,66 @@ const initialState = {
 
 type CheckinFormState = typeof initialState;
 
+const SOURCE_LABEL: Record<string, string> = {
+  STRAVA: 'Strava',
+  GARMIN: 'Garmin',
+  TRAINING_PEAKS: 'TrainingPeaks',
+  OTHER_APP: 'otra app',
+  MANUAL: 'entrada manual',
+};
+
 export default function CheckinForm() {
   const [form, setForm] = useState<CheckinFormState>(initialState);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'info' | 'error'>('info');
   const [profileDefault, setProfileDefault] = useState<string>('');
+  const [activitySources, setActivitySources] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
+
     fetch('/api/checkin')
-      .then((response) => {
-        if (!response.ok) throw new Error('No hay check-in aún');
-        return response.json();
-      })
-      .then((data) => {
+      .then((r) => (r.ok ? r.json() : null))
+      .then(async (data) => {
         if (!active) return;
-        const payload = data?.checkin;
-        if (!payload) {
-          setMessage('Nada guardado hoy, completa el formulario para registrar el día.');
+        const checkin = data?.checkin;
+
+        if (checkin) {
+          setForm((prev) => ({
+            ...prev,
+            date: checkin.date ? new Date(checkin.date).toISOString().slice(0, 10) : prev.date,
+            trainingType: checkin.trainingType ?? prev.trainingType,
+            durationMin: checkin.durationMin ?? prev.durationMin,
+            intensity: checkin.intensity ?? prev.intensity,
+            sleepHours: checkin.sleepHours ?? prev.sleepHours,
+            fatigue: checkin.fatigue ?? prev.fatigue,
+            timeOfDay: checkin.timeOfDay ?? prev.timeOfDay,
+          }));
+          setMessage('Datos cargados. Puedes actualizar y guardar de nuevo.');
           setMessageType('info');
           return;
         }
-        setForm((prev) => ({
-          ...prev,
-          date: payload.date ? new Date(payload.date).toISOString().slice(0, 10) : prev.date,
-          trainingType: payload.trainingType ?? prev.trainingType,
-          durationMin: payload.durationMin ?? prev.durationMin,
-          intensity: payload.intensity ?? prev.intensity,
-          sleepHours: payload.sleepHours ?? prev.sleepHours,
-          fatigue: payload.fatigue ?? prev.fatigue,
-          timeOfDay: payload.timeOfDay ?? prev.timeOfDay,
-        }));
-        setMessage('Datos cargados. Puedes actualizar y guardar de nuevo.');
-        setMessageType('info');
+
+        // No manual check-in — try to pre-fill from today's activity
+        const actRes = await fetch('/api/checkin/from-activity').catch(() => null);
+        if (!active) return;
+        const actData = actRes?.ok ? await actRes.json() : null;
+        const activity = actData?.activity;
+
+        if (activity) {
+          setForm((prev) => ({
+            ...prev,
+            trainingType: activity.trainingType ?? prev.trainingType,
+            durationMin: activity.durationMin ?? prev.durationMin,
+            intensity: activity.intensity ?? prev.intensity,
+          }));
+          setActivitySources(activity.sources ?? []);
+          setMessage(null);
+        } else {
+          setMessage('Sin actividad registrada hoy. Completa el formulario manualmente.');
+          setMessageType('info');
+        }
       })
       .catch(() => {
         if (active) {
@@ -127,6 +153,17 @@ export default function CheckinForm() {
         <p className="text-sm text-gray-500">Registro diario</p>
         <h2 className="text-2xl font-semibold text-gray-900">Cómo llega tu cuerpo hoy</h2>
       </header>
+
+      {activitySources.length > 0 && (
+        <div className="rounded-2xl px-4 py-3 text-sm bg-green-50 text-green-800 flex items-center gap-2">
+          <span>✓</span>
+          <span>
+            Datos de entrenamiento importados desde{' '}
+            <strong>{activitySources.map((s) => SOURCE_LABEL[s] ?? s).join(' y ')}</strong>.
+            Revisa y ajusta si es necesario.
+          </span>
+        </div>
+      )}
 
       {message && (
         <div

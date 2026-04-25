@@ -7,18 +7,14 @@ export async function GET() {
     const user = await requireAuth();
     const integration = await prisma.garminIntegration.findUnique({
       where: { userId: user.id },
-      select: {
-        externalUserId: true,
-        lastSyncAt: true,
-        createdAt: true,
-      },
+      select: { displayName: true, lastSyncAt: true, createdAt: true },
     });
     if (!integration) {
       return NextResponse.json({ connected: false });
     }
     return NextResponse.json({
       connected: true,
-      externalUserId: integration.externalUserId,
+      externalUserId: integration.displayName,
       lastSyncAt: integration.lastSyncAt,
       connectedAt: integration.createdAt,
     });

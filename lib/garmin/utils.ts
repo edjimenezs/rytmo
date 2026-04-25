@@ -1,36 +1,8 @@
 import { prisma } from '@/lib/prisma';
-import { garminClient } from './client';
+import { createGarminClient } from './client';
 import { ActivityType } from '@prisma/client';
-import { GarminActivity } from './types';
 
 const SOURCE = 'GARMIN' as const;
-
-export async function getGarminAccessToken(userId: string): Promise<string | null> {
-  const integration = await prisma.garminIntegration.findUnique({ where: { userId } });
-  if (!integration) return null;
-
-  const now = new Date();
-  if (now >= integration.expiresAt) {
-    try {
-      const refreshed = await garminClient.refreshToken(integration.refreshToken);
-      const expiresAt = new Date(now.getTime() + refreshed.expires_in * 1000);
-      await prisma.garminIntegration.update({
-        where: { userId },
-        data: {
-          accessToken: refreshed.access_token,
-          refreshToken: refreshed.refresh_token,
-          expiresAt,
-        },
-      });
-      return refreshed.access_token;
-    } catch (error) {
-      console.error('Failed to refresh Garmin token:', error);
-      return null;
-    }
-  }
-
-  return integration.accessToken;
-}
 
 function mapGarminTypeToActivityType(type: string): ActivityType {
   const map: Record<string, ActivityType> = {
@@ -45,25 +17,28 @@ function mapGarminTypeToActivityType(type: string): ActivityType {
   return map[type.toUpperCase()] || ActivityType.OTHER;
 }
 
-function buildActivityPayload(activity: GarminActivity) {
-  const startDate = new Date(activity.startTimeGmt);
-  const endDate = new Date(startDate.getTime() + activity.durationInSeconds * 1000);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildActivityPayload(activity: any) {
+  const startDate = new Date(activity.startTimeGMT ?? activity.startTimeGmt ?? activity.startTimeLocal);
+  const duration = activity.duration ?? activity.durationInSeconds ?? 0;
+  const endDate = new Date(startDate.getTime() + duration * 1000);
+  const activityType = activity.activityType?.typeKey ?? activity.activityType ?? 'OTHER';
   const averagePace =
-    activity.averagePaceInSecondsPerKilometer && activity.averagePaceInSecondsPerKilometer > 0
-      ? activity.averagePaceInSecondsPerKilometer / 60
+    activity.averageSpeed && activity.averageSpeed > 0
+      ? 1000 / activity.averageSpeed / 60
       : null;
 
   return {
-    name: activity.activityName,
-    type: mapGarminTypeToActivityType(activity.activityType),
+    name: activity.activityName ?? 'Garmin Activity',
+    type: mapGarminTypeToActivityType(activityType),
     source: SOURCE,
-    externalId: activity.activityId,
-    distance: activity.distanceInMeters ?? null,
-    duration: activity.durationInSeconds,
-    elevation: activity.elevationGainInMeters ?? null,
-    calories: activity.caloriesBurned ?? null,
-    averageHeartRate: activity.averageHeartRate ?? null,
-    maxHeartRate: activity.maxHeartRate ?? null,
+    externalId: String(activity.activityId),
+    distance: activity.distance ?? activity.distanceInMeters ?? null,
+    duration: Math.round(duration),
+    elevation: activity.elevationGain ?? activity.elevationGainInMeters ?? null,
+    calories: activity.calories ?? activity.caloriesBurned ?? null,
+    averageHeartRate: activity.averageHR ?? activity.averageHeartRate ?? null,
+    maxHeartRate: activity.maxHR ?? activity.maxHeartRate ?? null,
     averagePace,
     startDate,
     endDate,
@@ -71,45 +46,29 @@ function buildActivityPayload(activity: GarminActivity) {
   };
 }
 
-export async function syncGarminActivity(userId: string, activity: GarminActivity) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function syncGarminActivity(userId: string, activity: any) {
   const payload = buildActivityPayload(activity);
   const existing = await prisma.trainingActivity.findFirst({
-    where: {
-      userId,
-      externalId: activity.activityId,
-      source: SOURCE,
-    },
+    where: { userId, externalId: String(activity.activityId), source: SOURCE },
   });
 
   if (existing) {
-    await prisma.trainingActivity.update({
-      where: { id: existing.id },
-      data: payload,
-    });
-    return;
+    await prisma.trainingActivity.update({ where: { id: existing.id }, data: payload });
+  } else {
+    await prisma.trainingActivity.create({ data: { userId, ...payload } });
   }
-
-  await prisma.trainingActivity.create({
-    data: {
-      userId,
-      ...payload,
-    },
-  });
 }
 
-export async function syncRecentGarminActivities(userId: string, daysBack = 30) {
-  const accessToken = await getGarminAccessToken(userId);
-  if (!accessToken) throw new Error('No valid Garmin access token found');
+export async function syncRecentGarminActivities(userId: string, daysBack = 30): Promise<number> {
+  const client = await createGarminClient(userId);
 
-  const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
-  const nowDate = new Date();
-  const activities = await garminClient.getActivities(
-    accessToken,
-    startDate.toISOString(),
-    nowDate.toISOString(),
-    1,
-    100
-  );
+  const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0]!;
+  const endDate = new Date().toISOString().split('T')[0]!;
+
+  const activities = await client.getActivitiesByDate(startDate, endDate);
 
   for (const activity of activities) {
     await syncGarminActivity(userId, activity);
