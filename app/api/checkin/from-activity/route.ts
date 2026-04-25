@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/utils';
 import { ActivityType } from '@prisma/client';
+import { syncRecentGarminActivities } from '@/lib/garmin/utils';
+
+const SYNC_STALE_MS = 60 * 60 * 1000; // 1 hour
+
+async function syncGarminIfStale(userId: string): Promise<void> {
+  const integration = await prisma.garminIntegration.findUnique({
+    where: { userId },
+    select: { lastSyncAt: true },
+  });
+  if (!integration) return;
+  const isStale = !integration.lastSyncAt || Date.now() - integration.lastSyncAt.getTime() > SYNC_STALE_MS;
+  if (isStale) {
+    await syncRecentGarminActivities(userId, 7);
+  }
+}
 
 function activityTypeToTrainingType(types: ActivityType[]): string | null {
   const has = (t: ActivityType) => types.includes(t);
@@ -31,6 +46,8 @@ export async function GET(req: NextRequest) {
     base.setUTCHours(0, 0, 0, 0);
     const next = new Date(base);
     next.setUTCDate(next.getUTCDate() + 1);
+
+    await syncGarminIfStale(userId).catch(() => {});
 
     const activities = await prisma.trainingActivity.findMany({
       where: {
