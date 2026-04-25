@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import MomentAccordion from '@/components/nutrition/MomentAccordion';
+import MomentCard, { type MomentFoodItem, type MomentKey } from '@/components/nutrition/MomentCard';
 import FeedbackTrendsChart from '@/components/nutrition/FeedbackTrendsChart';
 
 type FoodItem = {
   name: string;
   portion: string;
+  carbs: number;
+  protein: number;
+  fat: number;
+  kcal: number;
 };
 
 type MomentData = {
@@ -26,20 +30,21 @@ type PlanData = {
 
 type TrendPoint = { date: string; energia: number | null; performance: number | null };
 
-const momentOrder = ['preWorkout', 'intraWorkout', 'postWorkout', 'dinner'] as const;
-const iconMap = {
-  preWorkout: 'sun',
-  intraWorkout: 'bolt',
-  postWorkout: 'fork',
-  dinner: 'moon',
-} as const;
+const momentOrder: MomentKey[] = ['preWorkout', 'intraWorkout', 'postWorkout', 'dinner'];
+
+const timingHints: Record<MomentKey, string> = {
+  preWorkout: '45–60 min antes',
+  intraWorkout: 'Cada 30–45 min',
+  postWorkout: 'Dentro de 2h',
+  snack: 'Entre comidas',
+  dinner: 'Cena de recuperación',
+};
 
 export default function DailyPlanView() {
   const [plan, setPlan] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasCheckin, setHasCheckin] = useState<boolean>(true);
-  const [openMoment, setOpenMoment] = useState<string>('preWorkout');
   const [trends, setTrends] = useState<TrendPoint[]>([]);
 
   useEffect(() => {
@@ -178,14 +183,13 @@ export default function DailyPlanView() {
           if (!momentData) return null;
 
           return (
-            <MomentAccordion
+            <MomentCard
               key={m}
+              momentKey={m}
               mealName={mealName}
+              timingHint={timingHints[m]}
               aiText={plan.aiMomentTexts?.[m] ?? null}
-              foods={momentData.foods.map((f) => ({ name: f.name, portion: f.portion }))}
-              isOpen={openMoment === m}
-              onToggle={() => setOpenMoment((prev) => (prev === m ? '' : m))}
-              icon={iconMap[m]}
+              foods={momentData.foods as MomentFoodItem[]}
             />
           );
         })}
