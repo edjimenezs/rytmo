@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/config";
 import Link from "next/link";
 import IntegrationCard from "@/components/integrations/IntegrationCard";
 
@@ -43,7 +46,10 @@ const highlights = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+  if (session) redirect('/dashboard');
+
   return (
     <div className="bg-slate-50">
       <main className="mx-auto max-w-6xl px-4 py-12 md:py-16 lg:py-20">

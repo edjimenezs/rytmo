@@ -56,15 +56,7 @@ export default function DashboardNav({ userName, userRole, minimal }: DashboardN
                   <Link href="/feedback" className={linkClass("/feedback")}>
                     Feedback
                   </Link>
-                  <Link href="/dashboard/team" className={linkClass("/dashboard/team")}>
-                    My Team
-                  </Link>
                 </>
-              )}
-              {(userRole === "COACH" || userRole === "NUTRITIONIST") && (
-                <Link href="/dashboard/clients" className={linkClass("/dashboard/clients")}>
-                  {userRole === "COACH" ? "Athletes" : "Clients"}
-                </Link>
               )}
             </div>
           )}
