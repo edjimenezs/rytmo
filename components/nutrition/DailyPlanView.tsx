@@ -166,7 +166,7 @@ export default function DailyPlanView() {
           {plan.aiHeadline ?? plan.summary}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          {new Date(plan.date).toLocaleDateString('es-CL', {
+          {new Date(plan.date.slice(0, 10) + 'T12:00:00').toLocaleDateString('es-CL', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
