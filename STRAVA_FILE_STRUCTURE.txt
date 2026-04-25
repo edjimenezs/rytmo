@@ -1,7 +1,7 @@
 Strava Integration - File Structure
 ====================================
 
-Project Root: /Users/lalojimenez/Desktop/streho
+Project Root: /Users/lalojimenez/Desktop/rytmo
 ├── .env.example                              [NEW] Environment variables template
 │
 ├── Documentation

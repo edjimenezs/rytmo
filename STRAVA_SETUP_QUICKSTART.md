@@ -7,7 +7,7 @@
 1. Visit: https://www.strava.com/settings/api
 2. Click "Create App" or use existing app
 3. Fill in:
-   - App Name: `Streho` (or your name)
+   - App Name: `RytMo` (or your name)
    - Website: `http://localhost:3000`
    - Authorization Callback Domain: `localhost`
 4. Save and copy:

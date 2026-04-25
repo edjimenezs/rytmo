@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 
-interface DayData {
+export interface CalendarDayData {
   date: string;
   count: number;
   duration: number; // in minutes
 }
 
+type DayData = CalendarDayData;
+
 interface CalendarHeatmapProps {
-  data: DayData[];
+  data: CalendarDayData[];
   loading?: boolean;
 }
 
@@ -66,7 +68,6 @@ export default function CalendarHeatmap({
   };
 
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   if (!data || data.length === 0) {
     return (

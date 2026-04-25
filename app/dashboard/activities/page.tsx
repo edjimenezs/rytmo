@@ -10,7 +10,7 @@ export default async function ActivitiesRoute() {
     redirect("/auth/login");
   }
 
-  const userRole = (user as any).role as UserRole;
+  const userRole = user.role ?? UserRole.ATHLETE;
 
   if (userRole !== UserRole.ATHLETE) {
     redirect("/dashboard");
@@ -18,5 +18,3 @@ export default async function ActivitiesRoute() {
 
   return <ActivitiesPage user={user} />;
 }
-
-

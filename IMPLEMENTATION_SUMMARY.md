@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Successfully implemented a comprehensive data visualization and analytics system for the Streho athlete performance tracking application. The system includes 5 different chart types, 5 API endpoints, interactive filtering, and a complete analytics dashboard.
+Successfully implemented a comprehensive data visualization and analytics system for the RytMo athlete performance tracking application. The system includes 5 different chart types, 5 API endpoints, interactive filtering, and a complete analytics dashboard.
 
 ---
 

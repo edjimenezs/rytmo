@@ -1,8 +1,9 @@
 import DashboardNav from "./DashboardNav";
 import Link from "next/link";
+import type { Session } from "next-auth";
 
 interface CoachDashboardProps {
-  user: any;
+  user: Session["user"];
 }
 
 export default function CoachDashboard({ user }: CoachDashboardProps) {

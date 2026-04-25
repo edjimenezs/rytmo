@@ -1,30 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import DateRangeSelector, { DateRangeOption } from "@/components/charts/DateRangeSelector";
-import TrainingVolumeChart from "@/components/charts/TrainingVolumeChart";
-import ActivityBreakdownChart from "@/components/charts/ActivityBreakdownChart";
-import PerformanceTrendsChart from "@/components/charts/PerformanceTrendsChart";
-import HeartRateZonesChart from "@/components/charts/HeartRateZonesChart";
-import CalendarHeatmap from "@/components/charts/CalendarHeatmap";
+import TrainingVolumeChart, { TrainingVolumeMetric, TrainingVolumeData } from "@/components/charts/TrainingVolumeChart";
+import ActivityBreakdownChart, { ActivityBreakdownItem } from "@/components/charts/ActivityBreakdownChart";
+import PerformanceTrendsChart, { PerformanceData, PerformanceMetric } from "@/components/charts/PerformanceTrendsChart";
+import HeartRateZonesChart, { HeartRateZoneData } from "@/components/charts/HeartRateZonesChart";
+import CalendarHeatmap, { CalendarDayData } from "@/components/charts/CalendarHeatmap";
 import StatCard from "@/components/charts/StatCard";
 import DashboardNav from "@/components/dashboard/DashboardNav";
+import { UserRole } from "@prisma/client";
 
 export default function AnalyticsPage() {
   const { data: session, status } = useSession();
   const [dateRange, setDateRange] = useState<DateRangeOption>("30d");
-  const [volumeMetric, setVolumeMetric] = useState<"duration" | "distance">("duration");
-  const [performanceMetric, setPerformanceMetric] = useState<"pace" | "speed" | "distance">("pace");
+  const [volumeMetric, setVolumeMetric] = useState<TrainingVolumeMetric>("duration");
+  const [performanceMetric, setPerformanceMetric] = useState<PerformanceMetric>("pace");
 
-  const [trainingVolumeData, setTrainingVolumeData] = useState([]);
-  const [activityBreakdownData, setActivityBreakdownData] = useState([]);
-  const [performanceTrendsData, setPerformanceTrendsData] = useState([]);
-  const [heartRateZonesData, setHeartRateZonesData] = useState([]);
-  const [calendarHeatmapData, setCalendarHeatmapData] = useState([]);
+  const [trainingVolumeData, setTrainingVolumeData] = useState<TrainingVolumeData[]>([]);
+  const [activityBreakdownData, setActivityBreakdownData] = useState<ActivityBreakdownItem[]>([]);
+  const [performanceTrendsData, setPerformanceTrendsData] = useState<PerformanceData[]>([]);
+  const [heartRateZonesData, setHeartRateZonesData] = useState<HeartRateZoneData[]>([]);
+  const [calendarHeatmapData, setCalendarHeatmapData] = useState<CalendarDayData[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const handlePerformanceMetricChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setPerformanceMetric(event.target.value as PerformanceMetric);
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -32,13 +36,7 @@ export default function AnalyticsPage() {
     }
   }, [status]);
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchAnalyticsData();
-    }
-  }, [dateRange, status]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     setLoading(true);
     try {
       const [volumeRes, breakdownRes, trendsRes, hrZonesRes, heatmapRes] = await Promise.all([
@@ -57,17 +55,23 @@ export default function AnalyticsPage() {
         heatmapRes.json(),
       ]);
 
-      setTrainingVolumeData(volumeData);
-      setActivityBreakdownData(breakdownData);
-      setPerformanceTrendsData(trendsData);
-      setHeartRateZonesData(hrZonesData);
-      setCalendarHeatmapData(heatmapData);
+      setTrainingVolumeData(volumeData as TrainingVolumeData[]);
+      setActivityBreakdownData(breakdownData as ActivityBreakdownItem[]);
+      setPerformanceTrendsData(trendsData as PerformanceData[]);
+      setHeartRateZonesData(hrZonesData as HeartRateZoneData[]);
+      setCalendarHeatmapData(heatmapData as CalendarDayData[]);
     } catch (error) {
       console.error("Error fetching analytics data:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      void fetchAnalyticsData();
+    }
+  }, [status, fetchAnalyticsData]);
 
   if (status === "loading") {
     return (
@@ -82,12 +86,12 @@ export default function AnalyticsPage() {
   }
 
   const user = session.user;
-  const userRole = (user as any).role || "ATHLETE";
+  const userRole = user.role ?? UserRole.ATHLETE;
 
   // Calculate summary stats
-  const totalActivities = activityBreakdownData.reduce((sum: number, item: any) => sum + item.count, 0);
-  const totalDistance = activityBreakdownData.reduce((sum: number, item: any) => sum + item.value, 0);
-  const totalDuration = trainingVolumeData.reduce((sum: number, item: any) => sum + item.duration, 0);
+  const totalActivities = activityBreakdownData.reduce((sum, item) => sum + item.count, 0);
+  const totalDistance = activityBreakdownData.reduce((sum, item) => sum + item.value, 0);
+  const totalDuration = trainingVolumeData.reduce((sum, item) => sum + (item.duration ?? 0), 0);
   const avgDuration = totalActivities > 0 ? Math.round(totalDuration / totalActivities) : 0;
 
   return (
@@ -202,7 +206,7 @@ export default function AnalyticsPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Performance Trends</h2>
                 <select
                   value={performanceMetric}
-                  onChange={(e) => setPerformanceMetric(e.target.value as any)}
+                  onChange={handlePerformanceMetricChange}
                   className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="pace">Pace</option>

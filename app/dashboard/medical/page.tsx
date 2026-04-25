@@ -10,7 +10,7 @@ export default async function MedicalDataRoute() {
     redirect("/auth/login");
   }
 
-  const userRole = (user as any).role as UserRole;
+  const userRole = user.role ?? UserRole.ATHLETE;
 
   if (userRole !== UserRole.ATHLETE) {
     redirect("/dashboard");
@@ -18,5 +18,3 @@ export default async function MedicalDataRoute() {
 
   return <MedicalDataPage user={user} />;
 }
-
-

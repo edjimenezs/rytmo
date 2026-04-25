@@ -1,24 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth/utils';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
+    const user = await requireAuth();
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
     const testName = searchParams.get('testName');
 
-    const where: any = { userId };
+    const where: Prisma.LabValueWhereInput = { userId };
     if (testName) {
       where.testName = testName;
     }
@@ -62,5 +54,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-

@@ -1,7 +1,8 @@
-import { PrismaClient, ActivityType } from "@prisma/client";
+import { PrismaClient, ActivityType, Prisma } from "@prisma/client";
 import { subDays, addHours } from "date-fns";
 
 const prisma = new PrismaClient();
+type TrainingActivityCreateData = Prisma.TrainingActivityUncheckedCreateInput;
 
 const activityTypes: ActivityType[] = [
   "RUNNING",
@@ -25,7 +26,7 @@ function randomIntInRange(min: number, max: number): number {
 export async function seedTrainingData(userId: string) {
   console.log("Seeding training data for user:", userId);
 
-  const activities = [];
+  const activities: TrainingActivityCreateData[] = [];
 
   // Generate activities for the last 90 days
   for (let i = 0; i < 90; i++) {
@@ -40,11 +41,12 @@ export async function seedTrainingData(userId: string) {
         const activityType = activityTypes[randomIntInRange(0, activityTypes.length)];
         const startTime = addHours(date, randomIntInRange(6, 20)); // Between 6 AM and 8 PM
 
-        let activity: any = {
+        let activity: TrainingActivityCreateData = {
           userId,
           type: activityType,
           source: "MANUAL",
           startDate: startTime,
+          name: "Training Session",
         };
 
         // Generate metrics based on activity type

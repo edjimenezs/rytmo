@@ -30,11 +30,12 @@ export default function TrainingPlanAgentPanel() {
         const body = await res.json().catch(() => null);
         if (!res.ok || !body) throw new Error(body?.error || "No se pudo obtener asistencia del agente.");
         setData(body);
-      } catch (err: any) {
-        setError(err.message || "No se pudo obtener asistencia del agente.");
-      } finally {
-        setLoading(false);
-      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "No se pudo obtener asistencia del agente.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
     };
     fetchData();
   }, []);

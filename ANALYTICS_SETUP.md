@@ -1,6 +1,6 @@
 # Analytics & Data Visualization Setup Guide
 
-This guide provides comprehensive documentation for the analytics and data visualization features implemented in the Streho athlete performance tracking application.
+This guide provides comprehensive documentation for the analytics and data visualization features implemented in the RytMo athlete performance tracking application.
 
 ## Overview
 
@@ -226,7 +226,7 @@ npx ts-node prisma/seed/trainingData.ts clxxxxxxxxxxxxxx
 ## File Structure
 
 ```
-streho/
+rytmo/
 ├── components/
 │   └── charts/
 │       ├── TrainingVolumeChart.tsx

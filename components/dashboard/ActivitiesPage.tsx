@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import format from 'date-fns/format';
 import DashboardNav from './DashboardNav';
 import Link from 'next/link';
+import type { Session } from 'next-auth';
 
 interface Activity {
   id: string;
@@ -64,7 +65,7 @@ function getSourceBadge(source: string): { label: string; color: string } {
   return { label: 'Manual', color: 'bg-blue-100 text-blue-800' };
 }
 
-export default function ActivitiesPage({ user }: { user: any }) {
+export default function ActivitiesPage({ user }: { user: Session["user"] }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'STRAVA' | 'MANUAL'>('ALL');
@@ -302,5 +303,4 @@ export default function ActivitiesPage({ user }: { user: any }) {
     </div>
   );
 }
-
 

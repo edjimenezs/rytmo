@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
-import { startOfDay, subDays } from "date-fns";
+import { getStartDateFromRange } from "@/lib/utils/range";
 
 type ActivityTypeValue =
   | "RUNNING"
@@ -12,56 +13,51 @@ type ActivityTypeValue =
   | "YOGA"
   | "OTHER";
 
+type ActivityDistance = Prisma.TrainingActivityGetPayload<{
+  select: {
+    type: true;
+    distance: true;
+  };
+}>;
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const userId = (user as any).id;
-
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "30d";
 
-    // Calculate date range
-    let daysToSubtract = 30;
-    if (range === "7d") daysToSubtract = 7;
-    else if (range === "90d") daysToSubtract = 90;
-    else if (range === "1y") daysToSubtract = 365;
+    const startDate = getStartDateFromRange(searchParams.get("range"));
 
-    const startDate = startOfDay(subDays(new Date(), daysToSubtract));
+    const where: Prisma.TrainingActivityWhereInput = {
+      userId,
+      startDate: { gte: startDate },
+    };
 
-    // Fetch activities grouped by type
-    const activities = await prisma.trainingActivity.findMany({
-      where: {
-        userId,
-        startDate: {
-          gte: startDate,
-        },
-      },
+    const activities: ActivityDistance[] = await prisma.trainingActivity.findMany({
+      where,
       select: {
         type: true,
         distance: true,
       },
     });
 
-    // Group by activity type
     const groupedData = new Map<ActivityTypeValue, { value: number; count: number }>();
 
-    activities.forEach((activity: { type: ActivityTypeValue; distance: number | null }) => {
+    activities.forEach((activity) => {
       const type = activity.type;
       const existing = groupedData.get(type) || { value: 0, count: 0 };
       groupedData.set(type, {
-        value: existing.value + (activity.distance ? activity.distance / 1000 : 0), // Convert to km
+        value: existing.value + (activity.distance ? activity.distance / 1000 : 0),
         count: existing.count + 1,
       });
     });
 
-    // Format for response
     const result = Array.from(groupedData.entries()).map(([type, data]) => ({
       name: type,
       value: Math.round(data.value * 10) / 10,
       count: data.count,
     }));
 
-    // Sort by value descending
     result.sort((a, b) => b.value - a.value);
 
     return NextResponse.json(result);

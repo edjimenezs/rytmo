@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete Strava integration implementation for the Streho athlete performance tracking application. The integration allows athletes to connect their Strava accounts and automatically sync their training activities.
+This document describes the complete Strava integration implementation for the RytMo athlete performance tracking application. The integration allows athletes to connect their Strava accounts and automatically sync their training activities.
 
 ## Features Implemented
 
@@ -185,7 +185,7 @@ model TrainingActivity {
 
 1. Go to [Strava API Settings](https://www.strava.com/settings/api)
 2. Create a new application:
-   - **Application Name**: Streho (or your app name)
+   - **Application Name**: RytMo (or your app name)
    - **Category**: Choose appropriate category
    - **Club**: Leave blank if not applicable
    - **Website**: Your application URL

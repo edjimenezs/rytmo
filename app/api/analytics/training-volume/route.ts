@@ -1,51 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+import { format, subDays } from "date-fns";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
-import { startOfDay, subDays, format } from "date-fns";
+import { getStartDateFromRange } from "@/lib/utils/range";
+
+type VolumeActivity = Prisma.TrainingActivityGetPayload<{
+  select: {
+    startDate: true;
+    duration: true;
+    distance: true;
+  };
+}>;
 
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const userId = (user as any).id;
-
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "30d";
 
-    // Calculate date range
-    let daysToSubtract = 30;
-    if (range === "7d") daysToSubtract = 7;
-    else if (range === "90d") daysToSubtract = 90;
-    else if (range === "1y") daysToSubtract = 365;
+    const startDate = getStartDateFromRange(searchParams.get("range"));
+    const daysToSubtract = Math.round((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    const startDate = startOfDay(subDays(new Date(), daysToSubtract));
-
-    // Fetch training activities
-    const activities = await prisma.trainingActivity.findMany({
+    const activities: VolumeActivity[] = await prisma.trainingActivity.findMany({
       where: {
         userId,
-        startDate: {
-          gte: startDate,
-        },
+        startDate: { gte: startDate },
       },
       orderBy: {
         startDate: "asc",
       },
+      select: {
+        startDate: true,
+        duration: true,
+        distance: true,
+      },
     });
 
-    // Group by date and calculate totals
     const groupedData = new Map<string, { duration: number; distance: number }>();
 
     activities.forEach((activity) => {
       const dateKey = format(new Date(activity.startDate), "yyyy-MM-dd");
       const existing = groupedData.get(dateKey) || { duration: 0, distance: 0 };
-
       groupedData.set(dateKey, {
-        duration: existing.duration + (activity.duration ? activity.duration / 60 : 0), // Convert to minutes
-        distance: existing.distance + (activity.distance ? activity.distance / 1000 : 0), // Convert to km
+        duration: existing.duration + (activity.duration ? activity.duration / 60 : 0),
+        distance: existing.distance + (activity.distance ? activity.distance / 1000 : 0),
       });
     });
 
-    // Fill in missing dates with zeros and format for response
     const result = [];
     for (let i = daysToSubtract - 1; i >= 0; i--) {
       const date = subDays(new Date(), i);

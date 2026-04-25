@@ -1,4 +1,4 @@
-# Streho - Health & Sports Ecosystem
+# RytMo - Health & Sports Ecosystem
 
 A unified platform for athletes, coaches, and nutritionists to track training and medical data.
 
@@ -45,7 +45,7 @@ A unified platform for athletes, coaches, and nutritionists to track training an
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd streho
+cd rytmo
 ```
 
 2. Install dependencies:
@@ -96,7 +96,7 @@ The application uses a comprehensive schema including:
 ## Project Structure
 
 ```
-streho/
+rytmo/
 ├── app/                      # Next.js App Router
 │   ├── api/                 # API routes
 │   │   └── auth/           # Authentication endpoints

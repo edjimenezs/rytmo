@@ -1,4 +1,4 @@
-import { LabValue, MedicalDocument } from '@prisma/client';
+import { LabValue } from '@prisma/client';
 
 interface LabValueWithDocument extends LabValue {
   document: {
@@ -204,4 +204,3 @@ export class MedicalAgent {
     };
   }
 }
-

@@ -1,16 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
 import { subDays } from "date-fns";
 import { askLLM } from "@/lib/ai/llm";
 
-export async function GET(_req: NextRequest) {
+type TrainingActivitySummary = Prisma.TrainingActivityGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    type: true;
+    distance: true;
+    duration: true;
+    averageHeartRate: true;
+    startDate: true;
+  };
+}>;
+
+export async function GET() {
   try {
     const user = await requireAuth();
-    const userId = (user as any).id;
+    const userId = user.id;
 
     // Últimos entrenos para dar contexto al agente
-    const activities = await prisma.trainingActivity.findMany({
+    const activities: TrainingActivitySummary[] = await prisma.trainingActivity.findMany({
       where: { userId, startDate: { gte: subDays(new Date(), 21) } },
       orderBy: { startDate: "desc" },
       take: 8,

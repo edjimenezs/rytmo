@@ -5,28 +5,28 @@ const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize';
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
 
 export class StravaClient {
-  private clientId: string;
-  private clientSecret: string;
-  private redirectUri: string;
+  private clientId?: string;
+  private clientSecret?: string;
+  private redirectUri?: string;
 
   constructor() {
-    const clientId = process.env.STRAVA_CLIENT_ID;
-    const clientSecret = process.env.STRAVA_CLIENT_SECRET;
-    const redirectUri = process.env.STRAVA_REDIRECT_URI;
+    // No lanzar aquí para permitir que la app arranque aun sin configurar Strava.
+    this.clientId = process.env.STRAVA_CLIENT_ID;
+    this.clientSecret = process.env.STRAVA_CLIENT_SECRET;
+    this.redirectUri = process.env.STRAVA_REDIRECT_URI;
+  }
 
-    if (!clientId || !clientSecret || !redirectUri) {
+  private ensureConfigured() {
+    if (!this.clientId || !this.clientSecret || !this.redirectUri) {
       throw new Error('Strava environment variables are not configured');
     }
-
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.redirectUri = redirectUri;
   }
 
   getAuthorizationUrl(state?: string): string {
+    this.ensureConfigured();
     const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      client_id: this.clientId!,
+      redirect_uri: this.redirectUri!,
       response_type: 'code',
       approval_prompt: 'auto',
       scope: 'read,activity:read_all,profile:read_all',
@@ -40,14 +40,15 @@ export class StravaClient {
   }
 
   async exchangeToken(code: string): Promise<StravaTokenResponse> {
+    this.ensureConfigured();
     const response = await fetch(STRAVA_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
+        client_id: this.clientId!,
+        client_secret: this.clientSecret!,
         code,
         grant_type: 'authorization_code',
       }),
@@ -62,14 +63,15 @@ export class StravaClient {
   }
 
   async refreshToken(refreshToken: string): Promise<StravaRefreshTokenResponse> {
+    this.ensureConfigured();
     const response = await fetch(STRAVA_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
+        client_id: this.clientId!,
+        client_secret: this.clientSecret!,
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
       }),
@@ -90,6 +92,7 @@ export class StravaClient {
     after?: number,
     before?: number
   ): Promise<StravaActivity[]> {
+    this.ensureConfigured();
     const params = new URLSearchParams({
       page: page.toString(),
       per_page: perPage.toString(),
@@ -119,6 +122,7 @@ export class StravaClient {
   }
 
   async getActivity(accessToken: string, activityId: number): Promise<StravaActivity> {
+    this.ensureConfigured();
     const url = STRAVA_API_BASE_URL + '/activities/' + activityId;
     const response = await fetch(url, {
       headers: {
@@ -135,6 +139,7 @@ export class StravaClient {
   }
 
   async deauthorize(accessToken: string): Promise<void> {
+    this.ensureConfigured();
     const url = STRAVA_API_BASE_URL + '/oauth/deauthorize';
     const response = await fetch(url, {
       method: 'POST',

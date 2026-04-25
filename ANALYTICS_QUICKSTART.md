@@ -68,7 +68,7 @@ Some charts let you switch metrics:
 ## File Locations
 
 ```
-streho/
+rytmo/
 ├── app/
 │   ├── api/analytics/              # 5 API routes
 │   └── dashboard/analytics/        # Analytics page

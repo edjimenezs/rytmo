@@ -1,8 +1,18 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-interface HeartRateZoneData {
+export interface HeartRateZoneData {
   zone: string;
   minutes: number;
   percentage: number;
@@ -46,21 +56,6 @@ export default function HeartRateZonesChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900">{data.zone}</p>
-          <p className="text-sm text-gray-600">{data.range}</p>
-          <p className="text-sm font-semibold text-blue-600 mt-1">{data.minutes} minutes</p>
-          <p className="text-sm text-gray-500">{data.percentage}% of total time</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
@@ -81,7 +76,7 @@ export default function HeartRateZonesChart({
               style: { fontSize: '12px', fill: '#6B7280' }
             }}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<HeartRateZonesCustomTooltip />} />
           <Legend />
           <Bar
             dataKey="minutes"
@@ -90,8 +85,8 @@ export default function HeartRateZonesChart({
             name="Time in Zone"
           >
             {data.map((entry, index) => (
-              <Bar
-                key={`bar-${index}`}
+              <Cell
+                key={`cell-${index}`}
                 fill={ZONE_COLORS[entry.zone as keyof typeof ZONE_COLORS] || "#3B82F6"}
               />
             ))}
@@ -101,3 +96,24 @@ export default function HeartRateZonesChart({
     </div>
   );
 }
+
+const HeartRateZonesCustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: HeartRateZoneData }>;
+}) => {
+  if (active && payload && payload.length) {
+    const entry = payload[0].payload as HeartRateZoneData;
+    return (
+      <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+        <p className="text-sm font-medium text-gray-900">{entry.zone}</p>
+        <p className="text-sm text-gray-600">{entry.range}</p>
+        <p className="text-sm font-semibold text-blue-600 mt-1">{entry.minutes} minutes</p>
+        <p className="text-sm text-gray-500">{entry.percentage}% of total time</p>
+      </div>
+    );
+  }
+  return null;
+};

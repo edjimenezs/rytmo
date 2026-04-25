@@ -85,9 +85,10 @@ export default function LabResultsComparison() {
       }
       const data = await response.json();
       setGroupedValues(data.groupedByTest || {});
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching lab values', err);
-      setError(err.message || 'No se pudieron cargar los valores de laboratorio.');
+      const message = err instanceof Error ? err.message : 'No se pudieron cargar los valores de laboratorio.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -117,9 +118,10 @@ export default function LabResultsComparison() {
       }
 
       await fetchValues();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error processing lab results', err);
-      setError(err.message || 'No se pudieron procesar los exámenes.');
+      const message = err instanceof Error ? err.message : 'No se pudieron procesar los exámenes.';
+      setError(message);
     } finally {
       setProcessing(false);
     }

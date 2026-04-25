@@ -192,7 +192,7 @@ STRAVA_REDIRECT_URI="https://your-domain.com/api/strava/callback"
 3. Fill in application details
 
 ### Step 2: Configure Settings
-- **Application Name**: Streho (or your name)
+- **Application Name**: RytMo (or your name)
 - **Category**: Training
 - **Club**: (leave blank)
 - **Website**: http://localhost:3000 (dev) or https://your-domain.com (prod)

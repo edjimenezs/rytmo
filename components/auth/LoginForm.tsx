@@ -31,6 +31,7 @@ export default function LoginForm() {
         router.refresh();
       }
     } catch (error) {
+      console.error("Sign-in failed:", error);
       setError("Something went wrong");
     } finally {
       setIsLoading(false);
@@ -42,7 +43,7 @@ export default function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to Streho
+            Sign in to RytMo
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Your health and performance ecosystem
@@ -106,7 +107,7 @@ export default function LoginForm() {
               href="/auth/register"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Link>
           </div>
         </form>

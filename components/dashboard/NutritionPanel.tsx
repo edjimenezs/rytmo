@@ -1,94 +1,145 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
+import type { NutritionMoment, NutritionPlanResponse } from '@/lib/nutrition/engine';
+import type { FoodOption } from '@/lib/nutrition/catalog';
 
-const sampleDay = [
-  { name: "Desayuno", calories: 450, carbs: 50, protein: 30, fat: 15 },
-  { name: "Almuerzo", calories: 650, carbs: 70, protein: 40, fat: 22 },
-  { name: "Cena", calories: 550, carbs: 55, protein: 35, fat: 18 },
-  { name: "Snacks", calories: 200, carbs: 20, protein: 10, fat: 8 },
+type NutritionApiResponse = {
+  plan: NutritionPlanResponse & {
+    id: string;
+    date: string;
+  };
+};
+
+const momentDefinitions: Array<{ key: NutritionMoment; title: string; description: string }> = [
+  { key: 'preWorkout', title: 'Antes de entrenar', description: 'Carga de energía lenta' },
+  { key: 'intraWorkout', title: 'Durante la sesión', description: 'Mantener ritmo e hidratación' },
+  { key: 'postWorkout', title: 'Inmediatamente después', description: 'Recuperación rápida' },
+  { key: 'dinner', title: 'Cena / Regeneración', description: 'Carga suave + proteínas' },
 ];
 
-const sampleTargets = { calories: 1900, protein: 120, carbs: 210, fat: 70 };
+const formatLoadValue = (value?: number | null) => (value !== null && value !== undefined ? value.toFixed(1) : '-');
 
 export default function NutritionPanel() {
-  const [plan] = useState(sampleDay);
-  const [targets] = useState(sampleTargets);
+  const [plan, setPlan] = useState<NutritionPlanResponse & { id: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const totals = plan.reduce(
-    (acc, meal) => {
-      acc.calories += meal.calories;
-      acc.carbs += meal.carbs;
-      acc.protein += meal.protein;
-      acc.fat += meal.fat;
-      return acc;
-    },
-    { calories: 0, carbs: 0, protein: 0, fat: 0 }
-  );
+  useEffect(() => {
+    const fetchPlan = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/daily-plan');
+        if (!res.ok) throw new Error('No se pudo cargar el plan de nutrición');
+        const payload: NutritionApiResponse = await res.json();
+        setPlan(payload.plan);
+      } catch (err) {
+        console.error('Daily nutrition plan failed', err);
+        setError('No se pudo calcular el plan. Intenta de nuevo o sincroniza tus sesiones.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlan();
+  }, []);
 
-  const badge = (value: number, target: number) => {
-    const pct = target ? Math.round((value / target) * 100) : 0;
-    const color =
-      pct < 90 ? "text-amber-700 bg-amber-100" : pct > 110 ? "text-red-700 bg-red-100" : "text-green-700 bg-green-100";
+  const momentum = useMemo(() => plan?.dayType ?? 'rest', [plan]);
+
+  const renderFoods = (foods: FoodOption[]) => {
+    if (!foods.length) {
+      return <p className="text-xs text-slate-500">Sin sugerencias específicas.</p>;
+    }
     return (
-      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${color}`}>
-        {pct}% del objetivo
-      </span>
+      <ul className="space-y-2">
+        {foods.map((food) => (
+          <li key={food.name} className="flex justify-between items-start gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{food.name}</p>
+              <p className="text-xs text-slate-500">{food.description}</p>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              {food.carbs}g C · {food.protein}g P · {food.fat}g G
+            </p>
+          </li>
+        ))}
+      </ul>
     );
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Nutrición</h3>
-          <p className="text-sm text-slate-600">Plan diario y macros objetivo (editable próximamente).</p>
+          <h3 className="text-lg font-semibold text-slate-900">Plan nutricional inteligente</h3>
+          <p className="text-sm text-slate-500">
+            Combina tu TrainingPeaks/Strava, ATL/CTL y alimentación para sugerir qué comer antes, durante y después.
+          </p>
         </div>
-        <div className="text-2xl">🍎</div>
-      </div>
+        <div className="flex flex-wrap gap-3 text-xs font-semibold">
+          <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-100">
+            CTL {formatLoadValue(plan?.loads.ctl)} AU
+          </span>
+          <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-100">
+            ATL {formatLoadValue(plan?.loads.atl)} AU
+          </span>
+          <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-100">
+            ACWR {formatLoadValue(plan?.loads.acwr)}
+          </span>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
-          <p className="text-xs text-slate-500 uppercase font-semibold">Calorías</p>
-          <p className="text-xl font-bold text-slate-900">{totals.calories} / {targets.calories} kcal</p>
-          {badge(totals.calories, targets.calories)}
-        </div>
-        <div className="p-3 rounded-xl border border-slate-200">
-          <p className="text-xs text-slate-500 uppercase font-semibold">Proteína</p>
-          <p className="text-xl font-bold text-slate-900">{totals.protein} g</p>
-          {badge(totals.protein, targets.protein)}
-        </div>
-        <div className="p-3 rounded-xl border border-slate-200">
-          <p className="text-xs text-slate-500 uppercase font-semibold">Carbohidratos</p>
-          <p className="text-xl font-bold text-slate-900">{totals.carbs} g</p>
-          {badge(totals.carbs, targets.carbs)}
-        </div>
-        <div className="p-3 rounded-xl border border-slate-200">
-          <p className="text-xs text-slate-500 uppercase font-semibold">Grasas</p>
-          <p className="text-xl font-bold text-slate-900">{totals.fat} g</p>
-          {badge(totals.fat, targets.fat)}
-        </div>
-      </div>
+      {loading && (
+        <p className="text-sm text-slate-600">Analizando la sesión del día y los datos de carga ...</p>
+      )}
+      {error && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+          {error}
+        </p>
+      )}
 
-      <div className="space-y-2">
-        {plan.map((meal) => (
-          <div key={meal.name} className="border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{meal.name}</p>
-              <p className="text-xs text-slate-500">
-                {meal.calories} kcal · {meal.carbs}g C · {meal.protein}g P · {meal.fat}g G
+      {!loading && plan && (
+        <>
+          <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 flex flex-col gap-2 text-sm text-slate-500">
+            <p>
+              Hoy el foco es <strong className="text-slate-900">{momentum}</strong> y tu razón es:{' '}
+              <span className="text-slate-900">{plan.reasoning}</span>
+            </p>
+            <p>Resumen: {plan.summary}</p>
+            <p>
+              Sesión: {plan.planEntry ? `${plan.planEntry.sessionType} · ${plan.planEntry.title}` : 'Descanso planificado'}
+            </p>
+            {plan.planEntry && (
+              <p>
+                Duración {plan.planEntry.durationMinutes ?? '—'} min · {plan.planEntry.tss ?? '—'} TSS · Actividad real:{' '}
+                {plan.planEntry.matchedActivityName ?? 'pendiente'}
               </p>
-            </div>
-            <button className="text-xs font-semibold text-blue-700 border border-blue-200 px-3 py-1 rounded-md bg-blue-50 hover:bg-blue-100">
-              Ajustar
-            </button>
+            )}
           </div>
-        ))}
-      </div>
 
-      <div className="text-xs text-slate-600">
-        Próximo paso: conectar con un coach/nutriólogo para personalizar objetivos y registrar ingesta real.
-      </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {momentDefinitions.map((moment) => {
+              const momentPlan = plan.moments[moment.key];
+              return (
+                <div key={moment.key} className="border border-slate-100 rounded-2xl p-4 space-y-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{moment.title}</p>
+                      <p className="text-xs text-slate-500">{moment.description}</p>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500">Momento</span>
+                  </div>
+                  <p className="text-sm text-slate-600">{momentPlan.text}</p>
+                  <div className="bg-slate-50 rounded-xl p-3">
+                    <h4 className="text-xs font-semibold text-slate-500 mb-2">Opciones sugeridas</h4>
+                    <div className="space-y-2">{renderFoods(momentPlan.foods)}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

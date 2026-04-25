@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/prisma';
 import { extractTextFromFile } from '@/lib/medical/pdfExtractor';
 import { parseLabResults } from '@/lib/medical/labParser';
 import { join } from 'path';
+import { requireAuth } from '@/lib/auth/utils';
+
+type DocumentProcessPayload = {
+  documentId?: string;
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    const { documentId } = await request.json();
+    const user = await requireAuth();
+    const userId = user.id;
+    const body = (await request.json()) as DocumentProcessPayload;
+    const documentId = typeof body?.documentId === 'string' ? body.documentId : undefined;
 
     if (!documentId) {
       return NextResponse.json(
@@ -59,9 +55,10 @@ export async function POST(request: NextRequest) {
     
     try {
       extractedText = await extractTextFromFile(filePath, document.mimeType);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to extract text from document';
       return NextResponse.json(
-        { error: error.message || 'Failed to extract text from document' },
+        { error: message },
         { status: 400 }
       );
     }
@@ -135,4 +132,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

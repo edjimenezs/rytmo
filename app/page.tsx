@@ -1,130 +1,152 @@
 import Link from "next/link";
+import IntegrationCard from "@/components/integrations/IntegrationCard";
+
+const integrationHighlights = [
+  {
+    key: "strava",
+    title: "Strava",
+    description: "Fueling decisions alimentadas con el histórico de Strava y tus zonas de esfuerzo.",
+    icon: "🏃",
+    helper: "Historias públicas de métricas y segmentos están disponibles tras conectar.",
+    ctaHref: "/auth/login",
+  },
+  {
+    key: "trainingpeaks",
+    title: "TrainingPeaks",
+    description: "Tus sesiones planificadas alimentan los objetivos diarios y la carga de entrenamiento.",
+    icon: "📅",
+    helper: "Sincroniza bloques y fases para ver qué comer antes, durante y después.",
+    ctaHref: "/auth/login",
+  },
+  {
+    key: "garmin",
+    title: "Garmin",
+    description: "Dispositivos, ritmos y frecuencia cardíaca que completan el contexto del día.",
+    icon: "⌚",
+    helper: "Combine sensores y planes en un solo panel de decisiones.",
+    ctaHref: "/auth/login",
+  },
+];
+
+const highlights = [
+  {
+    title: "Datos + decisión",
+    detail: "Cada recomendación combina cargas recientes con tu check-in y objetivos del día.",
+  },
+  {
+    title: "Comidas accionables",
+    detail: "Olvida los gramos. Recibe combinaciones reales: yogurt, avena, gel o arroz + pollo.",
+  },
+  {
+    title: "Salida AI controlada",
+    detail: "Las reglas solo sugieren comida; tú sigues el plan y entregas feedback al final del día.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="pt-20 pb-16 text-center">
-          <h1 className="text-5xl font-extrabold text-gray-900 sm:text-6xl md:text-7xl">
-            <span className="block">Welcome to</span>
-            <span className="block text-blue-600">Streho</span>
-          </h1>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Your unified health and sports ecosystem. Connect your training data with medical insights for optimal performance.
-          </p>
-          <div className="mt-10 flex justify-center gap-4">
-            <Link
-              href="/auth/register"
-              className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/auth/login"
-              className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-20 pb-20">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-blue-600 text-3xl mb-4">🏃</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                For Athletes
-              </h3>
-              <p className="text-gray-600">
-                Track your training, manage medical records, and collaborate with your coaching team - all in one place.
+    <div className="bg-slate-50">
+      <main className="mx-auto max-w-6xl px-4 py-12 md:py-16 lg:py-20">
+        <section className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+          <div className="space-y-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">
+              RytMo · nutrición inteligente
+            </p>
+            <div className="space-y-5">
+              <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+                Convierte tu entrenamiento en decisiones de alimentación simples para hoy.
+              </h1>
+              <p className="text-lg leading-relaxed text-slate-600">
+                RytMo lee tus actividades en Strava, TrainingPeaks y Garmin para sugerir comidas
+                prácticas antes, durante y después del entrenamiento. No necesitas calcular macros:
+                nosotros lo hacemos por ti.
               </p>
             </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-blue-600 text-3xl mb-4">💪</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                For Coaches
-              </h3>
-              <p className="text-gray-600">
-                Access your athletes' complete performance data, including medical insights, to create better training plans.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-blue-600 text-3xl mb-4">🥗</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                For Nutritionists
-              </h3>
-              <p className="text-gray-600">
-                View client activity and health data to provide personalized nutrition guidance for peak performance.
-              </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/plan"
+                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
+              >
+                Ver plan diario
+              </Link>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                Iniciar sesión
+              </Link>
             </div>
           </div>
-
-          <div className="mt-16 bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-              Key Features
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white text-xl">
-                    📊
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-lg font-medium text-gray-900">Training Integration</h4>
-                  <p className="mt-2 text-gray-600">
-                    Connect with Strava and other platforms, or enter data manually.
-                  </p>
-                </div>
+          <div className="space-y-4 rounded-3xl bg-gradient-to-br from-white to-blue-50 p-8 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900">Panel modular del día</h3>
+            <p className="text-sm text-slate-500">
+              Remote un vistazo rápido de la carga, el enfoque nutricional y el estado del plan.
+            </p>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Carga</p>
+                <p className="text-2xl font-semibold text-slate-900">72</p>
+                <p className="text-xs text-slate-500">CTL 64 · ATL 57</p>
               </div>
-
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white text-xl">
-                    🏥
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-lg font-medium text-gray-900">Medical Data</h4>
-                  <p className="mt-2 text-gray-600">
-                    Store and share lab results, imaging, and health records securely.
-                  </p>
-                </div>
+              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Objetivo</p>
+                <p className="text-2xl font-semibold text-slate-900">Recuperación activa</p>
+                <p className="text-xs text-slate-500">Foco en carbohidratos fáciles + proteína</p>
               </div>
-
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white text-xl">
-                    🤝
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-lg font-medium text-gray-900">Team Collaboration</h4>
-                  <p className="mt-2 text-gray-600">
-                    Connect with coaches and nutritionists for comprehensive support.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white text-xl">
-                    📈
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-lg font-medium text-gray-900">Holistic Insights</h4>
-                  <p className="mt-2 text-gray-600">
-                    Cross-reference training metrics with medical data for better decisions.
-                  </p>
-                </div>
+              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Tiempo</p>
+                <p className="text-2xl font-semibold text-slate-900">Poco más de 24 hrs</p>
+                <p className="text-xs text-slate-500">Haz check-in y ajusta la recomendación de cena</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <section className="mt-16 space-y-6">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+              Integraciones
+            </p>
+            <h2 className="text-3xl font-semibold text-slate-900">Conecta tus plataformas favoritas</h2>
+            <p className="max-w-2xl text-slate-600">
+              RytMo consume Strava, TrainingPeaks y Garmin para mantener la nutrición alineada con
+              cada sesión. Conecta y sincroniza en segundos.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {integrationHighlights.map((integration) => (
+              <IntegrationCard
+                key={integration.key}
+                title={integration.title}
+                description={integration.description}
+                icon={integration.icon}
+                helperText={integration.helper}
+                ctaHref={integration.ctaHref}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-16 space-y-6">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+              Qué hace diferente a RytMo
+            </p>
+            <h2 className="text-3xl font-semibold text-slate-900">Panel modular, decisiones rápidas</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {highlights.map((highlight) => (
+              <div
+                key={highlight.title}
+                className="rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur"
+              >
+                <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
+                <p className="mt-3 text-sm text-slate-600">{highlight.detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

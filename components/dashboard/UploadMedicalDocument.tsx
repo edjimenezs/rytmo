@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardNav from './DashboardNav';
 import Link from 'next/link';
 import { DocumentType } from '@prisma/client';
+import type { Session } from 'next-auth';
 
 const documentTypeLabels: Record<DocumentType, string> = {
   LAB_RESULT: 'Resultados de Laboratorio',
@@ -27,7 +28,7 @@ const labResultCategories = [
   'Otro',
 ];
 
-export default function UploadMedicalDocument({ user }: { user: any }) {
+export default function UploadMedicalDocument({ user }: { user: Session["user"] }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
@@ -331,4 +332,3 @@ export default function UploadMedicalDocument({ user }: { user: any }) {
     </div>
   );
 }
-

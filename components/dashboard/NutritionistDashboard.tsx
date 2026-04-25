@@ -1,8 +1,9 @@
 import DashboardNav from "./DashboardNav";
 import Link from "next/link";
+import type { Session } from "next-auth";
 
 interface NutritionistDashboardProps {
-  user: any;
+  user: Session["user"];
 }
 
 export default function NutritionistDashboard({ user }: NutritionistDashboardProps) {

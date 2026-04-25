@@ -1,23 +1,63 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-interface TrainingVolumeData {
+export interface TrainingVolumeData {
   date: string;
   duration: number; // in minutes
   distance: number; // in km
 }
 
+export type TrainingVolumeMetric = "duration" | "distance";
+
 interface TrainingVolumeChartProps {
   data: TrainingVolumeData[];
-  metric?: "duration" | "distance";
+  metric?: TrainingVolumeMetric;
   loading?: boolean;
 }
+
+type TrainingVolumeTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ payload: TrainingVolumeData; value?: number }>;
+  metric: TrainingVolumeMetric;
+};
+
+const TrainingVolumeCustomTooltip = ({
+  active,
+  payload,
+  metric,
+}: TrainingVolumeTooltipProps) => {
+  if (active && payload && payload.length) {
+    const current = payload[0];
+    const value = typeof current.value === "number" ? current.value : 0;
+    const date = (current.payload as TrainingVolumeData).date;
+    return (
+      <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+        <p className="text-sm font-medium text-gray-900">{date}</p>
+        <p className="text-sm text-blue-600 mt-1">
+          {metric === "duration"
+            ? `${value} minutes`
+            : `${value.toFixed(1)} km`}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function TrainingVolumeChart({
   data,
   metric = "duration",
-  loading = false
+  loading = false,
 }: TrainingVolumeChartProps) {
   if (loading) {
     return (
@@ -39,21 +79,6 @@ export default function TrainingVolumeChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900">{payload[0].payload.date}</p>
-          <p className="text-sm text-blue-600 mt-1">
-            {metric === "duration"
-              ? `${payload[0].value} minutes`
-              : `${payload[0].value.toFixed(1)} km`}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="w-full h-80">
@@ -75,7 +100,7 @@ export default function TrainingVolumeChart({
               style: { fontSize: '12px', fill: '#6B7280' }
             }}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<TrainingVolumeCustomTooltip metric={metric} />} />
           <Legend />
           <Line
             type="monotone"

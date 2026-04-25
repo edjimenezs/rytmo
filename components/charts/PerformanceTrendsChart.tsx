@@ -2,16 +2,18 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-interface PerformanceData {
+export interface PerformanceData {
   date: string;
   averagePace?: number;    // min/km
   averageSpeed?: number;   // km/h
   distance?: number;       // km
 }
 
+export type PerformanceMetric = "pace" | "speed" | "distance";
+
 interface PerformanceTrendsChartProps {
   data: PerformanceData[];
-  metric?: "pace" | "speed" | "distance";
+  metric?: PerformanceMetric;
   loading?: boolean;
 }
 
@@ -40,67 +42,33 @@ export default function PerformanceTrendsChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const value = payload[0].value;
-      let displayValue = "";
+const PERFORMANCE_CONFIG: Record<PerformanceMetric, {
+  yAxisLabel: string;
+  dataKey: keyof PerformanceData;
+  legend: string;
+  formatValue: (value: number) => string;
+}> = {
+  pace: {
+    yAxisLabel: "Pace (min/km)",
+    dataKey: "averagePace",
+    legend: "Avg Pace (min/km)",
+    formatValue: (value) => `${value.toFixed(2)} min/km`,
+  },
+  speed: {
+    yAxisLabel: "Speed (km/h)",
+    dataKey: "averageSpeed",
+    legend: "Avg Speed (km/h)",
+    formatValue: (value) => `${value.toFixed(1)} km/h`,
+  },
+  distance: {
+    yAxisLabel: "Distance (km)",
+    dataKey: "distance",
+    legend: "Distance (km)",
+    formatValue: (value) => `${value.toFixed(1)} km`,
+  },
+};
 
-      if (metric === "pace") {
-        displayValue = `${value.toFixed(2)} min/km`;
-      } else if (metric === "speed") {
-        displayValue = `${value.toFixed(1)} km/h`;
-      } else {
-        displayValue = `${value.toFixed(1)} km`;
-      }
-
-      return (
-        <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900">{payload[0].payload.date}</p>
-          <p className="text-sm text-emerald-600 mt-1">{displayValue}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const getYAxisLabel = () => {
-    switch (metric) {
-      case "pace":
-        return "Pace (min/km)";
-      case "speed":
-        return "Speed (km/h)";
-      case "distance":
-        return "Distance (km)";
-      default:
-        return "";
-    }
-  };
-
-  const getDataKey = () => {
-    switch (metric) {
-      case "pace":
-        return "averagePace";
-      case "speed":
-        return "averageSpeed";
-      case "distance":
-        return "distance";
-      default:
-        return "averagePace";
-    }
-  };
-
-  const getLegendName = () => {
-    switch (metric) {
-      case "pace":
-        return "Avg Pace (min/km)";
-      case "speed":
-        return "Avg Speed (km/h)";
-      case "distance":
-        return "Distance (km)";
-      default:
-        return "";
-    }
-  };
+  const config = PERFORMANCE_CONFIG[metric];
 
   return (
     <div className="w-full h-80">
@@ -116,25 +84,53 @@ export default function PerformanceTrendsChart({
             stroke="#6B7280"
             style={{ fontSize: '12px' }}
             label={{
-              value: getYAxisLabel(),
+              value: config.yAxisLabel,
               angle: -90,
               position: 'insideLeft',
               style: { fontSize: '12px', fill: '#6B7280' }
             }}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<PerformanceTrendsCustomTooltip formatValue={config.formatValue} />} />
           <Legend />
           <Line
             type="monotone"
-            dataKey={getDataKey()}
+            dataKey={config.dataKey}
             stroke="#10B981"
             strokeWidth={2}
             dot={{ fill: '#10B981', r: 4 }}
             activeDot={{ r: 6 }}
-            name={getLegendName()}
+            name={config.legend}
           />
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
+
+type PerformanceTooltipPayload = {
+  payload: PerformanceData;
+  value?: number;
+};
+
+const PerformanceTrendsCustomTooltip = ({
+  active,
+  payload,
+  formatValue,
+}: {
+  active?: boolean;
+  payload?: Array<PerformanceTooltipPayload>;
+  formatValue: (value: number) => string;
+}) => {
+  if (active && payload && payload.length) {
+    const current = payload[0];
+    const value = typeof current.value === "number" ? current.value : 0;
+    const date = (current.payload as PerformanceData).date;
+    return (
+      <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+        <p className="text-sm font-medium text-gray-900">{date}</p>
+        <p className="text-sm text-emerald-600 mt-1">{formatValue(value)}</p>
+      </div>
+    );
+  }
+  return null;
+};

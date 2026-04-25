@@ -7,9 +7,10 @@ import { usePathname } from "next/navigation";
 interface DashboardNavProps {
   userName: string | null | undefined;
   userRole: string;
+  minimal?: boolean;
 }
 
-export default function DashboardNav({ userName, userRole }: DashboardNavProps) {
+export default function DashboardNav({ userName, userRole, minimal }: DashboardNavProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -33,9 +34,10 @@ export default function DashboardNav({ userName, userRole }: DashboardNavProps) 
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/dashboard" className="text-2xl font-bold text-blue-600">
-                Streho
+                RytMo
               </Link>
             </div>
+          {!minimal && (
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link href="/dashboard" className={linkClass("/dashboard")}>
                 Dashboard
@@ -45,14 +47,14 @@ export default function DashboardNav({ userName, userRole }: DashboardNavProps) 
                   <Link href="/dashboard/activities" className={linkClass("/dashboard/activities")}>
                     Activities
                   </Link>
-                  <Link href="/dashboard/training-plan" className={linkClass("/dashboard/training-plan")}>
-                    Training Plan
+                  <Link href="/dashboard/training-load" className={linkClass("/dashboard/training-load")}>
+                    Training Load
                   </Link>
                   <Link href="/dashboard/nutrition-plan" className={linkClass("/dashboard/nutrition-plan")}>
                     Nutrition Plan
                   </Link>
-                  <Link href="/dashboard/medical" className={linkClass("/dashboard/medical")}>
-                    Medical Data
+                  <Link href="/feedback" className={linkClass("/feedback")}>
+                    Feedback
                   </Link>
                   <Link href="/dashboard/team" className={linkClass("/dashboard/team")}>
                     My Team
@@ -65,6 +67,7 @@ export default function DashboardNav({ userName, userRole }: DashboardNavProps) 
                 </Link>
               )}
             </div>
+          )}
           </div>
           <div className="flex items-center">
             <div className="flex-shrink-0">

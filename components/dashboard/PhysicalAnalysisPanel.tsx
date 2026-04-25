@@ -192,8 +192,10 @@ export default function PhysicalAnalysisPanel() {
           throw new Error("Sin datos de análisis disponibles.");
         }
         setData(body);
-      } catch (err: any) {
-        setError(err.message || "No se pudo cargar el análisis físico.");
+      } catch (err) {
+        console.error("Error loading physical analysis data:", err);
+        const message = err instanceof Error ? err.message : "No se pudo cargar el análisis físico.";
+        setError(message);
       } finally {
         setLoading(false);
       }

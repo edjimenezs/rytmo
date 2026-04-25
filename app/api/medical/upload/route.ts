@@ -1,35 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
-import { prisma } from '@/lib/prisma';
 import { DocumentType } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { requireAuth } from '@/lib/auth/utils';
+
+function isDocumentType(value: unknown): value is DocumentType {
+  return typeof value === 'string' && Object.values(DocumentType).includes(value as DocumentType);
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
+    const user = await requireAuth();
+    const userId = user.id;
+    const formData = await request.formData();
+
+    const fileEntry = formData.get('file');
+    const titleEntry = formData.get('title');
+    const descriptionEntry = formData.get('description');
+    const typeEntry = formData.get('type');
+    const testDateEntry = formData.get('testDate');
+
+    if (!(fileEntry instanceof File) || typeof titleEntry !== 'string' || !titleEntry.trim()) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'File and title are required' },
+        { status: 400 }
       );
     }
 
-    const userId = (session.user as any).id;
-    const formData = await request.formData();
-
-    const file = formData.get('file') as File;
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string | null;
-    const type = formData.get('type') as DocumentType;
-    const testDate = formData.get('testDate') as string | null;
-
-    if (!file || !title || !type) {
+    if (!isDocumentType(typeEntry)) {
       return NextResponse.json(
-        { error: 'File, title, and type are required' },
+        { error: 'Document type is required and must be valid' },
+        { status: 400 }
+      );
+    }
+
+    const file = fileEntry;
+    const title = titleEntry;
+    const description = typeof descriptionEntry === 'string' ? descriptionEntry : null;
+    const type = typeEntry;
+    const testDate = typeof testDateEntry === 'string' && testDateEntry.trim()
+      ? new Date(testDateEntry)
+      : null;
+
+    if (testDate && Number.isNaN(testDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid test date format' },
         { status: 400 }
       );
     }
@@ -118,5 +135,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

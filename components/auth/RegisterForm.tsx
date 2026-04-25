@@ -64,6 +64,7 @@ export default function RegisterForm() {
 
       router.push("/auth/login?registered=true");
     } catch (error) {
+      console.error("Registration failed:", error);
       setError("Something went wrong");
     } finally {
       setIsLoading(false);
@@ -78,7 +79,7 @@ export default function RegisterForm() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join the Streho ecosystem
+            Join the RytMo ecosystem
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

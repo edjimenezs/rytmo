@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import DashboardNav from './DashboardNav';
 import Link from 'next/link';
 import { DocumentType } from '@prisma/client';
+import type { Session } from 'next-auth';
 import MedicalAgentPanel from './MedicalAgentPanel';
 import LabResultsComparison from './LabResultsComparison';
 
@@ -44,7 +45,7 @@ function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-export default function MedicalDataPage({ user }: { user: any }) {
+export default function MedicalDataPage({ user }: { user: Session['user'] }) {
   const [documents, setDocuments] = useState<MedicalDocument[]>([]);
   const [groupedDocuments, setGroupedDocuments] = useState<Record<string, MedicalDocument[]>>({});
   const [loading, setLoading] = useState(true);
@@ -67,7 +68,7 @@ export default function MedicalDataPage({ user }: { user: any }) {
           setGroupedDocuments(data.groupedByType || {});
           setTotal(data.total || 0);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching medical documents:', error);
       } finally {
         setLoading(false);
@@ -101,7 +102,7 @@ export default function MedicalDataPage({ user }: { user: any }) {
           setTotal(data.total || 0);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting document:', error);
       alert('Error al eliminar el documento');
     }

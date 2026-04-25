@@ -1,13 +1,15 @@
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import { authOptions } from "./config";
 import { UserRole } from "@prisma/client";
 
-export async function getCurrentUser() {
+export type AuthenticatedUser = Session["user"];
+
+export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   const session = await getServerSession(authOptions);
-  return session?.user;
+  return session?.user ?? null;
 }
 
-export async function requireAuth() {
+export async function requireAuth(): Promise<AuthenticatedUser> {
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("Unauthorized");
@@ -15,13 +17,10 @@ export async function requireAuth() {
   return user;
 }
 
-export async function requireRole(allowedRoles: UserRole[]) {
+export async function requireRole(allowedRoles: UserRole[]): Promise<AuthenticatedUser> {
   const user = await requireAuth();
-  const userRole = (user as any).role as UserRole;
-
-  if (!allowedRoles.includes(userRole)) {
+  if (!allowedRoles.includes(user.role)) {
     throw new Error("Forbidden");
   }
-
   return user;
 }

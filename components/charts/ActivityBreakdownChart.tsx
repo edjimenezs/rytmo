@@ -1,20 +1,30 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import type { PieLabelRenderProps } from "recharts";
 
-interface ActivityData {
-  name: string;
+export type ActivityTypeValue =
+  | "RUNNING"
+  | "CYCLING"
+  | "SWIMMING"
+  | "WALKING"
+  | "WEIGHTLIFTING"
+  | "YOGA"
+  | "OTHER";
+
+export interface ActivityBreakdownItem {
+  name: ActivityTypeValue;
   value: number;
   count: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ActivityBreakdownChartProps {
-  data: ActivityData[];
+  data: ActivityBreakdownItem[];
   loading?: boolean;
 }
 
-const COLORS = {
+const COLORS: Record<ActivityTypeValue, string> = {
   RUNNING: '#3B82F6',      // Blue
   CYCLING: '#10B981',      // Green
   SWIMMING: '#06B6D4',     // Cyan
@@ -49,42 +59,6 @@ export default function ActivityBreakdownChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900">{data.name}</p>
-          <p className="text-sm text-gray-600 mt-1">{data.count} activities</p>
-          <p className="text-sm font-semibold text-blue-600">{data.value.toFixed(1)} km</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    if (percent < 0.05) return null;
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        className="text-xs font-semibold"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   return (
     <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
@@ -102,17 +76,17 @@ export default function ActivityBreakdownChart({
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[entry.name as keyof typeof COLORS] || COLORS.OTHER}
+                fill={COLORS[entry.name] || COLORS.OTHER}
               />
             ))}
           </Pie>
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<ActivityBreakdownCustomTooltip />} />
           <Legend
             verticalAlign="bottom"
             height={36}
             iconType="circle"
-            formatter={(value, entry: any) => {
-              const item = data.find(d => d.name === value);
+            formatter={(value: string) => {
+              const item = data.find((d) => d.name === value);
               return `${value} (${item?.count || 0})`;
             }}
           />
@@ -121,3 +95,62 @@ export default function ActivityBreakdownChart({
     </div>
   );
 }
+
+const ActivityBreakdownCustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: ActivityBreakdownItem }>;
+}) => {
+  if (active && payload && payload.length) {
+    const entry = payload[0].payload as ActivityBreakdownItem;
+    return (
+      <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+        <p className="text-sm font-medium text-gray-900">{entry.name}</p>
+        <p className="text-sm text-gray-600 mt-1">{entry.count} activities</p>
+        <p className="text-sm font-semibold text-blue-600">{entry.value.toFixed(1)} km</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+type ActivityPieLabelProps = {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent?: number;
+};
+
+const renderCustomLabel = (props: PieLabelRenderProps) => {
+  const {
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    percent,
+  } = props as unknown as ActivityPieLabelProps;
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  if (percent && percent < 0.05) return null;
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      className="text-xs font-semibold"
+    >
+      {`${((percent || 0) * 100).toFixed(0)}%`}
+    </text>
+  );
+};

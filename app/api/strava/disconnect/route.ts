@@ -1,22 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
+import { NextResponse } from 'next/server';
 import { stravaClient } from '@/lib/strava/client';
 import { prisma } from '@/lib/prisma';
 import { getValidAccessToken } from '@/lib/strava/utils';
+import { requireAuth } from '@/lib/auth/utils';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
+    const user = await requireAuth();
+    const userId = user.id;
 
     const integration = await prisma.stravaIntegration.findUnique({
       where: { userId },

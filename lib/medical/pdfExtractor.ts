@@ -1,27 +1,30 @@
 import fs from 'fs/promises';
 import path from 'path';
 
+type PdfParseResult = { text: string };
+type PdfParseFunction = (data: Buffer) => Promise<PdfParseResult>;
+
 export async function extractTextFromPDF(filePath: string): Promise<string> {
   try {
-    // Dynamic import with proper error handling
-    let pdfParse: any;
+    let pdfParse: PdfParseFunction;
     
     try {
-      const module = await import('pdf-parse');
-      pdfParse = module.default || module;
+      const pdfModule = await import('pdf-parse');
+      pdfParse = (pdfModule.default || pdfModule) as PdfParseFunction;
     } catch (importError) {
-      // If dynamic import fails, try using createRequire
+      console.warn('Falling back to require for pdf-parse:', importError);
       const { createRequire } = await import('module');
       const require = createRequire(path.resolve(process.cwd()));
-      pdfParse = require('pdf-parse');
+      pdfParse = require('pdf-parse') as PdfParseFunction;
     }
     
     const dataBuffer = await fs.readFile(filePath);
     const data = await pdfParse(dataBuffer);
     return data.text;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error extracting text from PDF:', error);
-    throw new Error(`Failed to extract text from PDF: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error while extracting PDF';
+    throw new Error(`Failed to extract text from PDF: ${message}`);
   }
 }
 
@@ -39,4 +42,3 @@ export async function extractTextFromFile(filePath: string, mimeType: string): P
   
   throw new Error(`Unsupported file type: ${mimeType}`);
 }
-

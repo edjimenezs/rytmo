@@ -1,31 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
+import { Prisma, DocumentType, MedicalDocument } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { DocumentType } from '@prisma/client';
+import { requireAuth } from '@/lib/auth/utils';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
+    const user = await requireAuth();
+    const userId = user.id;
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type') as DocumentType | null;
 
-    const where: any = { userId };
+    const where: Prisma.MedicalDocumentWhereInput = { userId };
     
     if (type) {
       where.type = type;
     }
 
-      const documents = await prisma.medicalDocument.findMany({
+    const documents = await prisma.medicalDocument.findMany({
       where,
       orderBy: {
         testDate: 'desc',
@@ -45,18 +36,16 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const totalCount = await prisma.medicalDocument.count({
-      where,
-    });
+    const totalCount = await prisma.medicalDocument.count({ where });
 
     // Group by type for easier frontend consumption
-    const groupedByType = documents.reduce((acc, doc) => {
-      if (!acc[doc.type]) {
-        acc[doc.type] = [];
-      }
-      acc[doc.type].push(doc);
-      return acc;
-    }, {} as Record<string, typeof documents>);
+    const groupedByType: Partial<Record<DocumentType, MedicalDocument[]>> = documents.reduce(
+      (acc, doc) => {
+        const bucket = acc[doc.type] || [];
+        return { ...acc, [doc.type]: [...bucket, doc] };
+      },
+      {} as Partial<Record<DocumentType, MedicalDocument[]>>
+    );
 
     return NextResponse.json({
       documents,
@@ -74,16 +63,8 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
+    const user = await requireAuth();
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
     const documentId = searchParams.get('id');
 
@@ -128,4 +109,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
