@@ -44,6 +44,25 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await requireAuth();
+    const userId = user.id;
+    const dateParam = req.nextUrl.searchParams.get('date');
+    const normalizedDate = normalizeDate(dateParam ?? undefined);
+
+    await prisma.dailyCheckin.deleteMany({
+      where: { userId, date: normalizedDate },
+    });
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unauthorized';
+    const status = message === 'Unauthorized' ? 401 : 400;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth();

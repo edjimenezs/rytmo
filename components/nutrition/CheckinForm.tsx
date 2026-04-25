@@ -45,6 +45,17 @@ export default function CheckinForm() {
   const [messageType, setMessageType] = useState<'info' | 'error'>('info');
   const [profileDefault, setProfileDefault] = useState<string>('');
   const [activitySources, setActivitySources] = useState<string[]>([]);
+  const [hasSavedCheckin, setHasSavedCheckin] = useState(false);
+  const [loadKey, setLoadKey] = useState(0);
+
+  const resetCheckin = async () => {
+    await fetch('/api/checkin', { method: 'DELETE' });
+    setHasSavedCheckin(false);
+    setMessage(null);
+    setForm(initialState);
+    setActivitySources([]);
+    setLoadKey((k) => k + 1);
+  };
 
   useEffect(() => {
     let active = true;
@@ -56,6 +67,7 @@ export default function CheckinForm() {
         const checkin = data?.checkin;
 
         if (checkin) {
+          setHasSavedCheckin(true);
           setForm((prev) => ({
             ...prev,
             date: checkin.date ? new Date(checkin.date).toISOString().slice(0, 10) : prev.date,
@@ -110,7 +122,7 @@ export default function CheckinForm() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadKey]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -184,6 +196,16 @@ export default function CheckinForm() {
         >
           {message}
         </div>
+      )}
+
+      {hasSavedCheckin && (
+        <button
+          type="button"
+          onClick={resetCheckin}
+          className="w-full text-sm text-gray-400 hover:text-red-500 transition-colors"
+        >
+          Resetear y cargar desde Garmin/Strava
+        </button>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
