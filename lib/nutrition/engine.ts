@@ -1,4 +1,16 @@
 import { foodCatalog, FoodOption } from "./catalog";
+import {
+  INTRA_FUEL_THRESHOLD_MIN,
+  DAY_TYPE_THRESHOLDS,
+  INTRA_CARBS_TARGET,
+  getDurationBucket,
+  SODIUM_THRESHOLD_MIN,
+  SODIUM_TARGET_MG_PER_H,
+  POST_PROTEIN_G_PER_KG,
+  POST_CARBS_G_PER_KG,
+  buildIntraReasoning,
+  buildPersonalizedPostReasoning,
+} from "./fueling-rules";
 import type { TrainingActivity } from "@prisma/client";
 
 type CheckinInput = {
@@ -90,8 +102,8 @@ function dayTypeFromCheckin(checkin?: CheckinInput): string {
   if (!checkin?.trainingType || checkin.trainingType === 'rest') return 'rest';
   const dur = checkin.durationMin ?? 0;
   const intensity = (checkin.intensity ?? '').toLowerCase();
-  if (intensity === 'high' || dur >= 90) return 'high';
-  if (intensity === 'moderate' || dur >= 45) return 'moderate';
+  if (intensity === 'high' || dur >= DAY_TYPE_THRESHOLDS.highDurationMin) return 'high';
+  if (intensity === 'moderate' || dur >= DAY_TYPE_THRESHOLDS.moderateDurationMin) return 'moderate';
   if (dur > 0) return 'low';
   return 'rest';
 }
@@ -111,11 +123,11 @@ const pickFoods = (moment: NutritionMoment, focus: string | null, daySeed: numbe
   const pool = candidates.length > 0
     ? candidates
     : foodCatalog.filter((option) => option.moment === moment);
-  if (pool.length <= 2) return pool;
+  if (pool.length <= 3) return pool;
   // Rotate selection based on day seed so different days get different foods
   const offset = daySeed % pool.length;
   const picked: FoodOption[] = [];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     picked.push(pool[(offset + i) % pool.length]);
   }
   return picked;
@@ -135,12 +147,14 @@ export function buildNutritionPlan(params: {
   planEntry?: NutritionPlanEntry;
   loads: { atl: number | null; ctl: number | null; acwr: number | null };
   checkin?: CheckinInput;
+  userWeightKg?: number | null;
 }) {
   const { planEntry, loads } = params;
 
   const baseDayType = canonicalDayType(planEntry, params.checkin);
   const baseFocus = planEntry?.focus ?? (baseDayType === "rest" ? "maintenance" : null);
-  const baseRequiresIntra = !!planEntry?.requiresIntraFuel || baseDayType === "high";
+  const durationMin = planEntry?.durationMinutes ?? params.checkin?.durationMin ?? 0;
+  const baseRequiresIntra = !!planEntry?.requiresIntraFuel || durationMin >= INTRA_FUEL_THRESHOLD_MIN;
 
   const { dayType, requiresIntraFuel: requiresIntra, recoveryFocus } = resolveCheckinModifiers(
     baseDayType, baseRequiresIntra, params.checkin
@@ -161,18 +175,64 @@ export function buildNutritionPlan(params: {
   const summary = planEntry
     ? `Hoy la sesión es ${entryLabel} con una carga ${dayType}.`
     : `Hoy no hay sesión planificada; el foco es mantenimiento y recuperación.`;
+  const sodiumNote = durationMin >= SODIUM_THRESHOLD_MIN
+    ? ` Sesión larga (${durationMin} min): incluí ${SODIUM_TARGET_MG_PER_H.min}–${SODIUM_TARGET_MG_PER_H.max} mg de sodio/hora para prevenir fatiga por electrolitos.`
+    : '';
   const reasoning = planEntry
-    ? requiresIntra
-      ? `Según la carga ${dayType}, necesitás intra para sostener la intensidad y luego recuperar con carbs + proteína.`
-      : `La sesión es moderada; priorizá comidas suaves para mantener energía y apoyar la recuperación.`
-    : `Cargas bajas y descanso. Mantén ingestas ligeras, balanceadas y prioriza sueño + hidratación.`;
+    ? `${buildIntraReasoning(durationMin, requiresIntra)} ${buildPersonalizedPostReasoning(dayType, params.userWeightKg ?? null)}${sodiumNote}`
+    : buildPersonalizedPostReasoning('rest', null);
 
-  const buildMoment = (moment: NutritionMoment, foods: FoodOption[]) => ({
-    text: moment === "intraWorkout" && !requiresIntra
-      ? "No se requiere intra fueling para esta sesión."
-      : `Sugiero: ${describeFoods(foods)}.`,
-    foods,
-  });
+  const buildMoment = (moment: NutritionMoment, foods: FoodOption[]) => {
+    if (moment === "intraWorkout" && !requiresIntra) {
+      return { text: "No se requiere intra fueling para esta sesión.", foods };
+    }
+    if (foods.length === 0) {
+      return { text: "Opciones no disponibles.", foods };
+    }
+
+    const weightKg = params.userWeightKg ?? null;
+    const parts: string[] = [];
+
+    if (moment === "intraWorkout" && requiresIntra) {
+      const target = INTRA_CARBS_TARGET[getDurationBucket(durationMin)];
+      for (const food of foods) {
+        if (food.carbs > 0 && target.max > 0) {
+          const n = Math.ceil(target.min / food.carbs);
+          const m = Math.ceil(target.max / food.carbs);
+          parts.push(`${food.name} (${food.carbs} g CHO/${food.portion}): ${n}–${m} por hora`);
+        } else {
+          parts.push(`${food.name} (${food.portion})`);
+        }
+      }
+      parts.push(`Objetivo: ${target.label}`);
+      return { text: parts.join('. '), foods };
+    }
+
+    if (moment === "postWorkout") {
+      for (const food of foods) {
+        if (weightKg) {
+          const pMin = Math.round(weightKg * POST_PROTEIN_G_PER_KG.min);
+          const pMax = Math.round(weightKg * POST_PROTEIN_G_PER_KG.max);
+          if (dayType === 'high') {
+            const cMin = Math.round(weightKg * POST_CARBS_G_PER_KG.min);
+            const cMax = Math.round(weightKg * POST_CARBS_G_PER_KG.max);
+            parts.push(`${food.name}: ${food.protein} g PRO (necesitás ${pMin}–${pMax} g), ${food.carbs} g CHO (necesitás ${cMin}–${cMax} g)`);
+          } else {
+            parts.push(`${food.name}: ${food.protein} g PRO (necesitás ${pMin}–${pMax} g), ${food.carbs} g CHO`);
+          }
+        } else {
+          parts.push(`${food.name}: ${food.protein} g PRO, ${food.carbs} g CHO (${food.kcal} kcal)`);
+        }
+      }
+      return { text: parts.join('. O: '), foods };
+    }
+
+    // preWorkout, snack, dinner
+    for (const food of foods) {
+      parts.push(`${food.name}: ${food.carbs} g CHO, ${food.protein} g PRO (${food.kcal} kcal)`);
+    }
+    return { text: parts.join('. O: '), foods };
+  };
 
   const plan: NutritionPlanResponse = {
     summary,

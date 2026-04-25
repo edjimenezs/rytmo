@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { buildNutritionPlan } from '@/lib/nutrition/engine';
 import { requireAuth } from '@/lib/auth/utils';
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
 
     const profile = await prisma.profile.findUnique({
       where: { userId },
-      select: { defaultTrainingTime: true },
+      select: { defaultTrainingTime: true, weight: true },
     });
     const trainingTime: 'morning' | 'midday' | 'evening' =
       (checkin?.timeOfDay as 'morning' | 'midday' | 'evening' | null) ??
@@ -65,6 +66,7 @@ export async function GET(req: NextRequest) {
       planEntry: planEntry ?? undefined,
       loads: { atl, ctl, acwr: Number.isFinite(acwr) ? acwr : null },
       checkin: checkin ?? undefined,
+      userWeightKg: profile?.weight ?? null,
     });
 
     const payload = {

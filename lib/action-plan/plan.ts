@@ -68,12 +68,13 @@ function integrationSummaryFromRecord(record: { lastSyncAt?: Date | null } | nul
 
 export async function buildActionPlan(userId: string, date?: string | Date): Promise<ActionPlanResponse> {
   const normalizedDate = normalizeDate(date);
-  const [planEntry, checkin, stravaIntegration, tpIntegration, garminIntegration] = await Promise.all([
+  const [planEntry, checkin, stravaIntegration, tpIntegration, garminIntegration, profile] = await Promise.all([
     findTrainingPlanEntryForDate(userId, normalizedDate),
     prisma.dailyCheckin.findUnique({ where: { userId_date: { userId, date: normalizedDate } } }),
     prisma.stravaIntegration.findUnique({ where: { userId } }),
     prisma.trainingPeaksIntegration.findUnique({ where: { userId } }),
     prisma.garminIntegration.findUnique({ where: { userId } }),
+    prisma.profile.findUnique({ where: { userId }, select: { weight: true } }),
   ]);
 
   const loads = await getDailyLoads(userId, 60);
@@ -88,6 +89,7 @@ export async function buildActionPlan(userId: string, date?: string | Date): Pro
       trainingType: checkin.trainingType,
       durationMin: checkin.durationMin,
     } : undefined,
+    userWeightKg: profile?.weight ?? null,
   });
 
   const tasks: ActionTask[] = [];
