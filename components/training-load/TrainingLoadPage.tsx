@@ -8,7 +8,6 @@ import GraficoCargas from "./GraficoCargas";
 import PanelRecomendaciones from "./PanelRecomendaciones";
 import CalendarioEntrenamiento from "./CalendarioEntrenamiento";
 import { LoadProvider } from "./LoadContext";
-import DashboardNav from "../dashboard/DashboardNav";
 import GlosarioCarga from "./GlosarioCarga";
 import PlanMatchList from "./PlanMatchList";
 import PlanUpload from "./PlanUpload";
@@ -22,12 +21,6 @@ export default function TrainingLoadPage({ user }: { user?: Session["user"] }) {
   return (
     <LoadProvider>
       <div className="min-h-screen bg-gray-50">
-        {user && (
-          <DashboardNav
-            userName={user.name}
-            userRole={user.role ?? "ATHLETE"}
-          />
-        )}
         <div className="max-w-7xl mx-auto py-8 px-4 space-y-6">
           <header className="flex items-center justify-between">
             <div>

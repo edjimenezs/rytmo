@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import format from 'date-fns/format';
-import DashboardNav from './DashboardNav';
 import Link from 'next/link';
 import type { Session } from 'next-auth';
 
@@ -98,7 +97,6 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardNav userName={user.name} userRole="ATHLETE" />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">

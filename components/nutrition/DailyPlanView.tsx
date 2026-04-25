@@ -52,46 +52,27 @@ export default function DailyPlanView() {
 
     async function load() {
       try {
-        // Check if check-in exists
-        const checkinRes = await fetch('/api/checkin');
+        const [planRes, checkinRes] = await Promise.all([
+          fetch('/api/daily-plan'),
+          fetch('/api/checkin'),
+        ]);
         if (!active) return;
 
-        if (checkinRes.status === 404 || !checkinRes.ok) {
-          const checkinData = await checkinRes.json().catch(() => ({}));
-          if (!checkinData?.checkin) {
-            setHasCheckin(false);
-            setLoading(false);
-            return;
-          }
-        } else {
-          const checkinData = await checkinRes.json();
-          if (!checkinData?.checkin) {
-            setHasCheckin(false);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Fetch plan
-        const planRes = await fetch('/api/daily-plan');
-        if (!active) return;
-
-        if (!planRes.ok) {
-          throw new Error('fetch-failed');
-        }
+        if (!planRes.ok) throw new Error('fetch-failed');
 
         const data = await planRes.json();
         if (!active) return;
-
         setPlan(data.plan);
 
-        // Non-blocking trends fetch (after setPlan)
+        const checkinData = await checkinRes.json().catch(() => ({}));
+        setHasCheckin(!!checkinData?.checkin);
+
         fetch('/api/feedback/trends?days=7')
           .then(r => r.ok ? r.json() : null)
           .then(data => {
             if (active && data?.count >= 3) setTrends(data.trends);
           })
-          .catch(() => {}); // trends are complementary, not critical
+          .catch(() => {});
       } catch {
         if (active) setError('No pudimos cargar tu plan.');
       } finally {
@@ -133,23 +114,6 @@ export default function DailyPlanView() {
     );
   }
 
-  if (!hasCheckin) {
-    return (
-      <div className="text-center space-y-4 py-12">
-        <h2 className="text-2xl font-semibold text-gray-900">Aun no registraste tu dia</h2>
-        <p className="text-sm text-gray-500">
-          Completa el check-in para ver tus recomendaciones de hoy.
-        </p>
-        <Link
-          href="/checkin"
-          className="inline-block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors"
-        >
-          Hacer check-in
-        </Link>
-      </div>
-    );
-  }
-
   if (!plan) {
     return (
       <div className="rounded-2xl bg-red-50 p-5 space-y-2">
@@ -173,6 +137,16 @@ export default function DailyPlanView() {
           })}
         </p>
       </div>
+
+      {!hasCheckin && (
+        <Link
+          href="/checkin"
+          className="flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 hover:bg-amber-100 transition-colors"
+        >
+          <span>Agrega sueño y fatiga para mayor precisión</span>
+          <span className="font-semibold">→</span>
+        </Link>
+      )}
 
       <div className="space-y-3">
         {momentOrder.map((m) => {
