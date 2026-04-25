@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/utils';
 import { subDays, startOfDay, format } from 'date-fns';
-import { es } from 'date-fns/locale/es';
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,7 +23,7 @@ export async function GET(req: NextRequest) {
     });
 
     const trends = feedbacks.map((f) => ({
-      date: format(new Date(f.date), 'EEE d', { locale: es }),
+      date: format(new Date(f.date), 'EEE d'),
       energia: f.energy,
       performance: f.performance,
     }));

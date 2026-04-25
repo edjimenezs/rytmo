@@ -14,7 +14,7 @@ const PACE_BANDS = [
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const userId = (user as any).id;
+    const userId = user.id;
 
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") || "90d";
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
       distanceKm: Number(band.distanceKm.toFixed(1)),
     }));
 
-    const lastActivities = activities.slice(0, 5).map((a) => ({
+    const lastActivities = activities.slice(0, 5).map((a: (typeof activities)[0]) => ({
       id: a.id,
       name: a.name,
       type: a.type,

@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
           date: normalizedDate,
         },
       },
-      update: { ...payload, aiHeadline: null, aiMomentTexts: null },
+      update: { ...payload, aiHeadline: null, aiMomentTexts: Prisma.JsonNull },
       create: {
         userId,
         date: normalizedDate,
