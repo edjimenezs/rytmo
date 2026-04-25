@@ -3,13 +3,13 @@ import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/utils";
 import { prisma } from "@/lib/prisma";
 
-type ActivitySourceValue = "MANUAL" | "STRAVA" | "TRAINING_PEAKS" | "OTHER_APP";
+type ActivitySourceValue = "MANUAL" | "STRAVA" | "GARMIN" | "TRAINING_PEAKS" | "OTHER_APP";
 
 const DEFAULT_FC_REPOSO = 50;
 const DEFAULT_FC_MAX = 185;
 
 function isActivitySourceValue(value: string | null): value is ActivitySourceValue {
-  return value !== null && ["MANUAL", "STRAVA", "TRAINING_PEAKS", "OTHER_APP"].includes(value);
+  return value !== null && ["MANUAL", "STRAVA", "GARMIN", "TRAINING_PEAKS", "OTHER_APP"].includes(value);
 }
 
 function parseLimit(value: string | null): number {

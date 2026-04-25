@@ -59,16 +59,15 @@ function getActivityIcon(type: string): string {
 }
 
 function getSourceBadge(source: string): { label: string; color: string } {
-  if (source === 'STRAVA') {
-    return { label: 'Strava', color: 'bg-orange-100 text-orange-800' };
-  }
+  if (source === 'STRAVA') return { label: 'Strava', color: 'bg-orange-100 text-orange-800' };
+  if (source === 'GARMIN') return { label: 'Garmin', color: 'bg-teal-100 text-teal-800' };
   return { label: 'Manual', color: 'bg-blue-100 text-blue-800' };
 }
 
 export default function ActivitiesPage({ user }: { user: Session["user"] }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'ALL' | 'STRAVA' | 'MANUAL'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'STRAVA' | 'GARMIN' | 'MANUAL'>('ALL');
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -139,6 +138,16 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
                 }`}
               >
                 Strava
+              </button>
+              <button
+                onClick={() => setFilter('GARMIN')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  filter === 'GARMIN'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Garmin
               </button>
               <button
                 onClick={() => setFilter('MANUAL')}
