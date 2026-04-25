@@ -38,34 +38,43 @@ export async function GET(req: NextRequest) {
     const dateParam = req.nextUrl.searchParams.get('date');
     const normalizedDate = normalizeDate(dateParam ?? undefined);
 
-    const loads = await getDailyLoads(userId, 60);
-    const { atl, ctl, acwr } = calcularAtlCtlAcwr(loads);
-    const planEntry = await findTrainingPlanEntryForDate(userId, normalizedDate);
-    const checkin = await prisma.dailyCheckin.findUnique({
-      where: { userId_date: { userId, date: normalizedDate } },
-      select: {
-        fatigue: true,
-        sleepHours: true,
-        intensity: true,
-        trainingType: true,
-        durationMin: true,
-        timeOfDay: true,
-      },
-    });
+    const [loadsRaw, planEntry, checkin, garminHealth, profile] = await Promise.all([
+      getDailyLoads(userId, 60),
+      findTrainingPlanEntryForDate(userId, normalizedDate),
+      prisma.dailyCheckin.findUnique({
+        where: { userId_date: { userId, date: normalizedDate } },
+        select: { fatigue: true, sleepHours: true, intensity: true, trainingType: true, durationMin: true, timeOfDay: true },
+      }),
+      prisma.garminDailyHealth.findUnique({
+        where: { userId_date: { userId, date: normalizedDate } },
+        select: { bodyBatteryCharged: true, trainingReadiness: true, hrvStatus: true, sleepMinutes: true, stressAvg: true },
+      }),
+      prisma.profile.findUnique({
+        where: { userId },
+        select: { defaultTrainingTime: true, weight: true },
+      }),
+    ]);
 
-    const profile = await prisma.profile.findUnique({
-      where: { userId },
-      select: { defaultTrainingTime: true, weight: true },
-    });
+    const { atl, ctl, acwr } = calcularAtlCtlAcwr(loadsRaw);
+
     const trainingTime: 'morning' | 'midday' | 'evening' =
       (checkin?.timeOfDay as 'morning' | 'midday' | 'evening' | null) ??
       (profile?.defaultTrainingTime as 'morning' | 'midday' | 'evening' | null) ??
       'morning';
 
+    // Merge Garmin health into checkin (checkin manual values take priority)
+    const mergedCheckin = {
+      ...checkin,
+      sleepHours: checkin?.sleepHours ?? (garminHealth?.sleepMinutes ? garminHealth.sleepMinutes / 60 : null),
+      bodyBattery: garminHealth?.bodyBatteryCharged ?? null,
+      trainingReadiness: garminHealth?.trainingReadiness ?? null,
+      hrvStatus: garminHealth?.hrvStatus ?? null,
+    };
+
     const planResponse = buildNutritionPlan({
       planEntry: planEntry ?? undefined,
       loads: { atl, ctl, acwr: Number.isFinite(acwr) ? acwr : null },
-      checkin: checkin ?? undefined,
+      checkin: mergedCheckin,
       userWeightKg: profile?.weight ?? null,
     });
 

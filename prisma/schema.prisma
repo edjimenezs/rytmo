@@ -59,7 +59,8 @@ model User {
   stravaIntegration StravaIntegration?
   trainingPlanEntries TrainingPlanEntry[] @relation("UserTrainingPlanEntries")
   trainingPeaksIntegration TrainingPeaksIntegration?
-  garminIntegration GarminIntegration?
+  garminIntegration  GarminIntegration?
+  garminDailyHealths GarminDailyHealth[]
 
   @@index([email])
   @@index([role])
@@ -363,6 +364,35 @@ model GarminIntegration {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model GarminDailyHealth {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime
+
+  sleepMinutes       Int?
+  sleepQuality       Int?
+  bodyBatteryCharged Int?
+  bodyBatteryDrained Int?
+  stressAvg          Int?
+  hrvWeeklyAvg       Float?
+  hrvLastNight       Float?
+  hrvStatus          String?
+  trainingReadiness  Int?
+  restingHeartRate   Int?
+  vo2Max             Float?
+  steps              Int?
+  respirationAvg     Float?
+  spO2Avg            Float?
+
+  syncedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
 }
 
 // ============================================

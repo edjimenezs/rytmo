@@ -19,7 +19,16 @@ type CheckinInput = {
   intensity?: string | null;
   trainingType?: string | null;
   durationMin?: number | null;
+  bodyBattery?: number | null;       // 0–100 Garmin body battery (charged)
+  trainingReadiness?: number | null; // 0–100 Garmin training readiness
+  hrvStatus?: string | null;         // BALANCED | LOW | UNBALANCED
 };
+
+function downgradeDayType(dt: string): string {
+  if (dt === 'high') return 'moderate';
+  if (dt === 'moderate') return 'low';
+  return 'rest';
+}
 
 function resolveCheckinModifiers(
   baseDayType: string,
@@ -32,15 +41,38 @@ function resolveCheckinModifiers(
 
   let dayType = baseDayType;
   let requiresIntraFuel = baseRequiresIntra;
+  let recoveryFocus = false;
+
+  // Very low body battery → force recovery regardless of session
+  if (checkin.bodyBattery != null && checkin.bodyBattery < 20) {
+    dayType = 'rest';
+    requiresIntraFuel = false;
+    recoveryFocus = true;
+  }
+
+  // Low training readiness → downgrade one level
+  if (checkin.trainingReadiness != null && checkin.trainingReadiness < 40) {
+    dayType = downgradeDayType(dayType);
+    if (dayType === 'rest' || dayType === 'low') requiresIntraFuel = false;
+    recoveryFocus = true;
+  }
+
+  // HRV suppressed → add recovery focus
+  if (checkin.hrvStatus === 'LOW' || checkin.hrvStatus === 'UNBALANCED') {
+    recoveryFocus = true;
+    if (dayType === 'high') dayType = 'moderate';
+  }
 
   // High fatigue: downgrade perceived intensity
   if (checkin.fatigue != null && checkin.fatigue >= 4) {
-    if (dayType === 'high') dayType = 'moderate';
+    dayType = downgradeDayType(dayType);
     requiresIntraFuel = false;
   }
 
   // Poor sleep: force recovery focus on dinner
-  const recoveryFocus = checkin.sleepHours != null && checkin.sleepHours < 6;
+  if (!recoveryFocus && checkin.sleepHours != null && checkin.sleepHours < 6) {
+    recoveryFocus = true;
+  }
 
   return { dayType, requiresIntraFuel, recoveryFocus };
 }
