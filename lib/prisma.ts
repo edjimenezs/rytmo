@@ -7,11 +7,16 @@ const globalForPrisma = globalThis as unknown as {
 function buildDatasourceUrl(): string | undefined {
   const url = process.env.DATABASE_URL;
   if (!url) return undefined;
-  // PgBouncer transaction mode requires prepared statements disabled
-  if (url.includes('pgbouncer=true') && !url.includes('prepared_statements=false')) {
-    return url.includes('?') ? `${url}&prepared_statements=false` : `${url}?prepared_statements=false`;
+  // Always disable prepared statements in production — required for PgBouncer transaction mode
+  // (Supabase session pooler port 5432 also tolerates this safely)
+  try {
+    const u = new URL(url);
+    u.searchParams.set('pgbouncer', 'true');
+    u.searchParams.set('prepared_statements', 'false');
+    return u.toString();
+  } catch {
+    return url;
   }
-  return url;
 }
 
 function createPrismaClient() {
