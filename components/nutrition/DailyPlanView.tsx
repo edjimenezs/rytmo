@@ -67,7 +67,8 @@ export default function DailyPlanView({ date }: { date?: string }) {
         setPlan(data.plan);
 
         const checkinData = await checkinRes.json().catch(() => ({}));
-        setHasCheckin(!!checkinData?.checkin);
+        // Suppress banner if Garmin already provided sleep/body battery data
+        setHasCheckin(!!checkinData?.checkin || !!data.plan?.hasGarminHealth);
 
         fetch('/api/feedback/trends?days=7')
           .then(r => r.ok ? r.json() : null)

@@ -216,13 +216,21 @@ export default function HomeCard() {
 
       {/* Sync button */}
       <div className="flex flex-col gap-1">
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-        >
-          {syncing ? 'Sincronizando…' : '↻ Sincronizar Garmin y Strava'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {syncing ? 'Sincronizando…' : '↻ Sincronizar'}
+          </button>
+          <a
+            href="/api/strava/auth"
+            className="text-sm text-orange-500 hover:text-orange-600 py-2 px-3 rounded-xl border border-orange-200 bg-white hover:bg-orange-50 transition-colors"
+          >
+            Reconectar Strava
+          </a>
+        </div>
         {syncMsg && (
           <p className="text-xs text-center px-1 text-gray-500">{syncMsg}</p>
         )}

@@ -181,6 +181,9 @@ export async function GET(req: NextRequest) {
         planEntryId: planEntry?.id ?? null,
         trainingActivityId: planEntry?.matchedActivity?.id ?? null,
         createdAt: plan.createdAt.toISOString(),
+        hasGarminHealth: !!(garminHealth?.sleepMinutes || garminHealth?.bodyBatteryCharged),
+        garminSleep: garminHealth?.sleepMinutes ? Math.round(garminHealth.sleepMinutes / 60 * 10) / 10 : null,
+        garminBodyBattery: garminHealth?.bodyBatteryCharged ?? null,
       },
     });
   } catch (error) {
