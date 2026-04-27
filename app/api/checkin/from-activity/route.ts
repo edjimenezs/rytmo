@@ -4,23 +4,31 @@ import { requireAuth } from '@/lib/auth/utils';
 import { ActivityType } from '@prisma/client';
 import { syncRecentGarminActivities } from '@/lib/garmin/utils';
 import { syncGarminDailyHealth } from '@/lib/garmin/health-sync';
+import { syncRecentStravaActivities } from '@/lib/strava/utils';
 
-const SYNC_STALE_MS = 60 * 60 * 1000; // 1 hour
+const SYNC_STALE_MS = 15 * 60 * 1000; // 15 minutes
 
-async function syncGarminIfStale(userId: string): Promise<void> {
-  const integration = await prisma.garminIntegration.findUnique({
-    where: { userId },
-    select: { lastSyncAt: true },
-  });
-  if (!integration) return;
-  const isStale = !integration.lastSyncAt || Date.now() - integration.lastSyncAt.getTime() > SYNC_STALE_MS;
-  if (isStale) {
-    await Promise.all([
-      syncRecentGarminActivities(userId, 7),
-      syncGarminDailyHealth(userId).catch(() => {}),
-    ]);
+async function syncIntegrationsIfStale(userId: string): Promise<void> {
+  const [garmin, strava] = await Promise.all([
+    prisma.garminIntegration.findUnique({ where: { userId }, select: { lastSyncAt: true } }),
+    prisma.stravaIntegration.findUnique({ where: { userId }, select: { lastSyncAt: true } }),
+  ]);
+
+  const now = Date.now();
+  const garminStale = garmin && (!garmin.lastSyncAt || now - garmin.lastSyncAt.getTime() > SYNC_STALE_MS);
+  const stravaStale = strava && (!strava.lastSyncAt || now - strava.lastSyncAt.getTime() > SYNC_STALE_MS);
+
+  const jobs: Promise<unknown>[] = [];
+  if (garminStale) {
+    jobs.push(syncRecentGarminActivities(userId, 7));
+    jobs.push(syncGarminDailyHealth(userId).catch(() => {}));
   }
+  if (stravaStale) {
+    jobs.push(syncRecentStravaActivities(userId, 7).catch(() => {}));
+  }
+  if (jobs.length > 0) await Promise.all(jobs);
 }
+
 
 function activityTypeToTrainingType(types: ActivityType[]): string | null {
   const has = (t: ActivityType) => types.includes(t);
@@ -51,7 +59,7 @@ export async function GET(req: NextRequest) {
     const next = new Date(base);
     next.setUTCDate(next.getUTCDate() + 1);
 
-    await syncGarminIfStale(userId).catch(() => {});
+    await syncIntegrationsIfStale(userId).catch(() => {});
 
     const [activities, garminHealth] = await Promise.all([
       prisma.trainingActivity.findMany({
