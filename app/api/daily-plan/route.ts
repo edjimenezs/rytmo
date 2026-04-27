@@ -38,7 +38,10 @@ export async function GET(req: NextRequest) {
     const dateParam = req.nextUrl.searchParams.get('date');
     const normalizedDate = normalizeDate(dateParam ?? undefined);
 
-    const [loadsRaw, planEntry, checkin, garminHealth, profile] = await Promise.all([
+    const nextDate = new Date(normalizedDate);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+
+    const [loadsRaw, planEntry, checkin, garminHealth, profile, todayActivities] = await Promise.all([
       getDailyLoads(userId, 60),
       findTrainingPlanEntryForDate(userId, normalizedDate),
       prisma.dailyCheckin.findUnique({
@@ -53,6 +56,11 @@ export async function GET(req: NextRequest) {
         where: { userId },
         select: { defaultTrainingTime: true, weight: true },
       }),
+      prisma.trainingActivity.findMany({
+        where: { userId, startDate: { gte: normalizedDate, lt: nextDate } },
+        select: { type: true, duration: true, averageHeartRate: true },
+        orderBy: { startDate: 'asc' },
+      }),
     ]);
 
     const { atl, ctl, acwr } = calcularAtlCtlAcwr(loadsRaw);
@@ -62,9 +70,31 @@ export async function GET(req: NextRequest) {
       (profile?.defaultTrainingTime as 'morning' | 'midday' | 'evening' | null) ??
       'morning';
 
-    // Merge Garmin health into checkin (checkin manual values take priority)
+    // Derive training info from actual activities when no manual checkin
+    let activityTrainingType: string | null = null;
+    let activityDurationMin: number | null = null;
+    let activityIntensity: string | null = null;
+    if (todayActivities.length > 0 && !checkin?.trainingType) {
+      const typeMap: Record<string, string> = {
+        RUNNING: 'run', CYCLING: 'bike', SWIMMING: 'swim',
+        WALKING: 'run', WEIGHTLIFTING: 'strength', YOGA: 'strength', OTHER: 'strength',
+      };
+      activityTrainingType = typeMap[todayActivities[0].type] ?? 'strength';
+      const totalSec = todayActivities.reduce((s, a) => s + (a.duration ?? 0), 0);
+      activityDurationMin = totalSec > 0 ? Math.round(totalSec / 60) : null;
+      const validHr = todayActivities.filter(a => a.averageHeartRate != null);
+      const avgHr = validHr.length > 0
+        ? validHr.reduce((s, a) => s + (a.averageHeartRate ?? 0), 0) / validHr.length
+        : null;
+      activityIntensity = avgHr == null ? 'Moderate' : avgHr < 130 ? 'Low' : avgHr <= 155 ? 'Moderate' : 'High';
+    }
+
+    // Merge: manual checkin > derived from activities > Garmin health
     const mergedCheckin = {
       ...checkin,
+      trainingType: checkin?.trainingType ?? activityTrainingType,
+      durationMin: checkin?.durationMin ?? activityDurationMin,
+      intensity: checkin?.intensity ?? activityIntensity,
       sleepHours: checkin?.sleepHours ?? (garminHealth?.sleepMinutes ? garminHealth.sleepMinutes / 60 : null),
       bodyBattery: garminHealth?.bodyBatteryCharged ?? null,
       trainingReadiness: garminHealth?.trainingReadiness ?? null,

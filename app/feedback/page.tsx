@@ -7,7 +7,7 @@ export default async function FeedbackPage() {
   if (!user) redirect('/auth/login');
 
   return (
-    <div className="max-w-[480px] mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 sm:px-6">
       <FeedbackForm />
     </div>
   );
