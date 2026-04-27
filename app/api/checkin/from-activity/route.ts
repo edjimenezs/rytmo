@@ -15,16 +15,19 @@ async function syncIntegrationsIfStale(userId: string): Promise<void> {
   ]);
 
   const now = Date.now();
-  const garminStale = garmin && (!garmin.lastSyncAt || now - garmin.lastSyncAt.getTime() > SYNC_STALE_MS);
+  // Garmin: sync if creds configured and (no record yet OR record is stale)
+  const hasGarminCreds = !!(process.env.GARMIN_EMAIL && process.env.GARMIN_PASSWORD);
+  const garminStale = hasGarminCreds && (!garmin || !garmin.lastSyncAt || now - garmin.lastSyncAt.getTime() > SYNC_STALE_MS);
+  // Strava: only sync if OAuth record exists (needs stored tokens)
   const stravaStale = strava && (!strava.lastSyncAt || now - strava.lastSyncAt.getTime() > SYNC_STALE_MS);
 
   const jobs: Promise<unknown>[] = [];
   if (garminStale) {
-    jobs.push(syncRecentGarminActivities(userId, 7));
+    jobs.push(syncRecentGarminActivities(userId, 30));
     jobs.push(syncGarminDailyHealth(userId).catch(() => {}));
   }
   if (stravaStale) {
-    jobs.push(syncRecentStravaActivities(userId, 7).catch(() => {}));
+    jobs.push(syncRecentStravaActivities(userId, 30).catch(() => {}));
   }
   if (jobs.length > 0) await Promise.all(jobs);
 }

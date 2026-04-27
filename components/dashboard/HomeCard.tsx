@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 
 type ActivityType =
@@ -71,64 +71,102 @@ export default function HomeCard() {
   const [hasCheckin, setHasCheckin] = useState(false);
   const [history, setHistory] = useState<HistoryDay[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadToday() {
-      try {
-        const [checkinRes, activityRes] = await Promise.all([
-          fetch('/api/checkin'),
-          fetch('/api/checkin/from-activity'),
-        ]);
-        if (!active) return;
-
-        const checkinData = await checkinRes.json().catch(() => ({}));
-        const activityData = await activityRes.json().catch(() => ({}));
-
-        const checkin = !!checkinData?.checkin;
-        const hasActivity = !!activityData?.activity;
-        setHasCheckin(checkin);
-        setTodayState(checkin || hasActivity ? 'has_data' : 'no_data');
-
-        // Always try to load the plan headline
-        try {
-          const planRes = await fetch('/api/daily-plan');
-          if (!active) return;
-          if (planRes.ok) {
-            const planData = await planRes.json();
-            if (active) setHeadline(planData?.plan?.aiHeadline ?? planData?.plan?.summary ?? null);
-          }
-        } catch { /* non-critical */ }
-      } catch {
-        if (active) setTodayState('no_data');
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/history');
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.days ?? []);
       }
+    } catch { /* non-critical */ } finally {
+      setHistoryLoading(false);
     }
-
-    async function loadHistory() {
-      try {
-        const res = await fetch('/api/history');
-        if (!active) return;
-        if (res.ok) {
-          const data = await res.json();
-          if (active) setHistory(data.days ?? []);
-        }
-      } catch { /* non-critical */ } finally {
-        if (active) setHistoryLoading(false);
-      }
-    }
-
-    loadToday();
-    loadHistory();
-    return () => { active = false; };
   }, []);
 
-  const pastHistory = history.filter((d) => {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const dayDate = new Date(`${d.date}T00:00:00Z`);
-    return dayDate.getTime() < today.getTime();
-  });
+  const loadToday = useCallback(async () => {
+    try {
+      const [checkinRes, activityRes] = await Promise.all([
+        fetch('/api/checkin'),
+        fetch('/api/checkin/from-activity'),
+      ]);
+      const checkinData = await checkinRes.json().catch(() => ({}));
+      const activityData = await activityRes.json().catch(() => ({}));
+      const checkin = !!checkinData?.checkin;
+      const hasActivity = !!activityData?.activity;
+      setHasCheckin(checkin);
+      setTodayState(checkin || hasActivity ? 'has_data' : 'no_data');
+
+      try {
+        const planRes = await fetch('/api/daily-plan');
+        if (planRes.ok) {
+          const planData = await planRes.json();
+          setHeadline(planData?.plan?.aiHeadline ?? planData?.plan?.summary ?? null);
+        }
+      } catch { /* non-critical */ }
+    } catch {
+      setTodayState('no_data');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadToday();
+    loadHistory();
+  }, [loadToday, loadHistory]);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const [garminRes, stravaRes] = await Promise.allSettled([
+        fetch('/api/garmin/sync', { method: 'POST' }),
+        fetch('/api/strava/sync', { method: 'POST' }),
+      ]);
+
+      const garminOk = garminRes.status === 'fulfilled' && garminRes.value.ok;
+      const stravaOk = stravaRes.status === 'fulfilled' && stravaRes.value.ok;
+
+      let garminCount = 0;
+      let stravaCount = 0;
+      let garminErr = '';
+      let stravaErr = '';
+
+      if (garminRes.status === 'fulfilled') {
+        const d = await garminRes.value.json().catch(() => ({}));
+        garminCount = d.synced ?? 0;
+        garminErr = d.error ?? '';
+      }
+      if (stravaRes.status === 'fulfilled') {
+        const d = await stravaRes.value.json().catch(() => ({}));
+        stravaCount = d.synced ?? 0;
+        stravaErr = d.error ?? '';
+      }
+
+      if (garminOk || stravaOk) {
+        const parts = [];
+        if (garminOk) parts.push(`Garmin: ${garminCount} actividades`);
+        else parts.push(`Garmin: error${garminErr ? ` (${garminErr})` : ''}`);
+        if (stravaOk) parts.push(`Strava: ${stravaCount} actividades`);
+        else parts.push(`Strava: error${stravaErr ? ` (${stravaErr})` : ''}`);
+        setSyncMsg(parts.join(' · '));
+        // Reload data
+        setHistoryLoading(true);
+        setTodayState('loading');
+        await Promise.all([loadToday(), loadHistory()]);
+      } else {
+        const errParts = [];
+        if (garminErr) errParts.push(`Garmin: ${garminErr}`);
+        if (stravaErr) errParts.push(`Strava: ${stravaErr}`);
+        setSyncMsg(`Error: ${errParts.join(' · ') || 'ambas integraciones fallaron'}`);
+      }
+    } catch (e) {
+      setSyncMsg(`Error: ${e instanceof Error ? e.message : 'desconocido'}`);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -147,10 +185,7 @@ export default function HomeCard() {
                 Ver tu plan
               </Link>
               {!hasCheckin && (
-                <Link
-                  href="/checkin"
-                  className="block w-full text-center text-sm text-gray-500 hover:text-gray-700"
-                >
+                <Link href="/checkin" className="block w-full text-center text-sm text-gray-500 hover:text-gray-700">
                   Agregar sueño y fatiga →
                 </Link>
               )}
@@ -164,16 +199,27 @@ export default function HomeCard() {
               >
                 Ver plan del día
               </Link>
-              <Link
-                href="/checkin"
-                className="block w-full text-center text-sm text-gray-500 hover:text-gray-700"
-              >
+              <Link href="/checkin" className="block w-full text-center text-sm text-gray-500 hover:text-gray-700">
                 Registrar check-in →
               </Link>
             </>
           )}
         </div>
       )}
+
+      {/* Sync button */}
+      <div className="flex flex-col gap-1">
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          {syncing ? 'Sincronizando…' : '↻ Sincronizar Garmin y Strava'}
+        </button>
+        {syncMsg && (
+          <p className="text-xs text-center px-1 text-gray-500">{syncMsg}</p>
+        )}
+      </div>
 
       {/* History section */}
       <div>
@@ -186,11 +232,11 @@ export default function HomeCard() {
               <div key={i} className="rounded-xl bg-gray-100 animate-pulse h-16" />
             ))}
           </div>
-        ) : pastHistory.length === 0 ? (
-          <p className="text-sm text-gray-400 px-1">Sin historial en los últimos 14 días</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-gray-400 px-1">Sin actividades sincronizadas aún</p>
         ) : (
           <div className="space-y-2">
-            {pastHistory.map((day) => (
+            {history.map((day) => (
               <DayHistoryRow key={day.date} day={day} />
             ))}
           </div>
