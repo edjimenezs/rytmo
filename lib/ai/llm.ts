@@ -17,7 +17,11 @@ export async function askLLM(prompt: string, options: AskOptions = {}): Promise<
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return null;
 
-    const res = await fetch("https://api.openai.com/v1/responses", {
+    const messages: { role: string; content: string }[] = [];
+    if (options.system) messages.push({ role: "system", content: options.system });
+    messages.push({ role: "user", content: prompt });
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -25,15 +29,14 @@ export async function askLLM(prompt: string, options: AskOptions = {}): Promise<
       },
       body: JSON.stringify({
         model: options.model || "gpt-4o-mini",
-        input: prompt,
-        max_output_tokens: 800,
-        system: options.system,
+        messages,
+        max_tokens: 800,
       }),
     });
 
     if (!res.ok) return null;
     const data = await res.json();
-    return data.output_text || data.output?.[0]?.content?.[0]?.text || null;
+    return data.choices?.[0]?.message?.content || null;
   }
 
   if (provider === "anthropic") {
