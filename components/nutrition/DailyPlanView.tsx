@@ -40,7 +40,7 @@ const timingHints: Record<MomentKey, string> = {
   dinner: 'Cena de recuperación',
 };
 
-export default function DailyPlanView() {
+export default function DailyPlanView({ date }: { date?: string }) {
   const [plan, setPlan] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +52,11 @@ export default function DailyPlanView() {
 
     async function load() {
       try {
+        const planUrl = date ? `/api/daily-plan?date=${date}` : '/api/daily-plan';
+        const checkinUrl = date ? `/api/checkin?date=${date}` : '/api/checkin';
         const [planRes, checkinRes] = await Promise.all([
-          fetch('/api/daily-plan'),
-          fetch('/api/checkin'),
+          fetch(planUrl),
+          fetch(checkinUrl),
         ]);
         if (!active) return;
 
