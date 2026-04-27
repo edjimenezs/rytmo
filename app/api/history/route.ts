@@ -7,13 +7,9 @@ export async function GET() {
     const user = await requireAuth();
     const userId = user.id;
 
-    const since = new Date();
-    since.setUTCDate(since.getUTCDate() - 14);
-    since.setUTCHours(0, 0, 0, 0);
-
     const [activities, plans] = await Promise.all([
       prisma.trainingActivity.findMany({
-        where: { userId, startDate: { gte: since } },
+        where: { userId },
         select: {
           id: true,
           name: true,
@@ -25,10 +21,10 @@ export async function GET() {
           startDate: true,
         },
         orderBy: { startDate: 'desc' },
-        take: 30,
+        take: 60,
       }),
       prisma.dailyRecommendation.findMany({
-        where: { userId, date: { gte: since } },
+        where: { userId },
         select: {
           id: true,
           date: true,
@@ -37,7 +33,7 @@ export async function GET() {
           dayType: true,
         },
         orderBy: { date: 'desc' },
-        take: 14,
+        take: 30,
       }),
     ]);
 
@@ -49,23 +45,22 @@ export async function GET() {
       actsByDate[key].push(a);
     }
 
-    // Build unified day records for last 14 days
+    // Build day records from actual activity/plan dates (not a fixed window)
+    const allKeys = new Set<string>([
+      ...Object.keys(actsByDate),
+      ...plans.map((p) => p.date.toISOString().split('T')[0]!),
+    ]);
+
     const days: {
       date: string;
       activities: typeof activities;
       plan: (typeof plans)[0] | null;
     }[] = [];
 
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setUTCDate(d.getUTCDate() - i);
-      d.setUTCHours(0, 0, 0, 0);
-      const key = d.toISOString().split('T')[0]!;
+    for (const key of [...allKeys].sort().reverse().slice(0, 30)) {
       const dayActivities = actsByDate[key] ?? [];
       const dayPlan = plans.find((p) => p.date.toISOString().split('T')[0] === key) ?? null;
-      if (dayActivities.length > 0 || dayPlan) {
-        days.push({ date: key, activities: dayActivities, plan: dayPlan });
-      }
+      days.push({ date: key, activities: dayActivities, plan: dayPlan });
     }
 
     return NextResponse.json({ days });
