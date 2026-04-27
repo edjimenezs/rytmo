@@ -133,10 +133,12 @@ export default function HomeCard() {
       let garminErr = '';
       let stravaErr = '';
 
+      let garminHealthErr = '';
       if (garminRes.status === 'fulfilled') {
         const d = await garminRes.value.json().catch(() => ({}));
         garminCount = d.synced ?? 0;
         garminErr = d.error ?? '';
+        garminHealthErr = d.healthError ?? '';
       }
       if (stravaRes.status === 'fulfilled') {
         const d = await stravaRes.value.json().catch(() => ({}));
@@ -146,8 +148,13 @@ export default function HomeCard() {
 
       if (garminOk || stravaOk) {
         const parts = [];
-        if (garminOk) parts.push(`Garmin: ${garminCount} actividades`);
-        else parts.push(`Garmin: error${garminErr ? ` (${garminErr})` : ''}`);
+        if (garminOk) {
+          parts.push(`Garmin: ${garminCount} actividades`);
+          if (garminHealthErr) parts.push(`salud: error (${garminHealthErr})`);
+          else parts.push('salud: ok');
+        } else {
+          parts.push(`Garmin: error${garminErr ? ` (${garminErr})` : ''}`);
+        }
         if (stravaOk) parts.push(`Strava: ${stravaCount} actividades`);
         else parts.push(`Strava: error${stravaErr ? ` (${stravaErr})` : ''}`);
         setSyncMsg(parts.join(' · '));
