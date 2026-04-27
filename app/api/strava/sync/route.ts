@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
     const synced = await syncRecentStravaActivities(userId, days);
     return NextResponse.json({ synced });
   } catch (error) {
-    console.error('Error syncing Strava activities:', error);
-    return NextResponse.json({ error: 'Failed to sync Strava' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error syncing Strava:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

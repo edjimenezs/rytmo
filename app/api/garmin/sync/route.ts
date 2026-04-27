@@ -12,7 +12,8 @@ export async function POST() {
     ]);
     return NextResponse.json({ synced });
   } catch (error) {
-    console.error('Error syncing Garmin:', error);
-    return NextResponse.json({ error: 'Failed to sync Garmin' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error syncing Garmin:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
