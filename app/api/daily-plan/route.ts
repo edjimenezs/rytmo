@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.trainingActivity.findMany({
         where: { userId, startDate: { gte: normalizedDate, lt: nextDate } },
-        select: { type: true, duration: true, averageHeartRate: true, startDate: true },
+        select: { id: true, name: true, type: true, duration: true, distance: true, source: true, averageHeartRate: true, startDate: true },
         orderBy: { startDate: 'asc' },
       }),
     ]);
@@ -191,6 +191,15 @@ export async function GET(req: NextRequest) {
         hasGarminHealth: !!(garminHealth?.sleepMinutes || garminHealth?.bodyBatteryCharged),
         garminSleep: garminHealth?.sleepMinutes ? Math.round(garminHealth.sleepMinutes / 60 * 10) / 10 : null,
         garminBodyBattery: garminHealth?.bodyBatteryCharged ?? null,
+        todayActivity: todayActivities.length > 0 ? {
+          id: todayActivities[0].id,
+          name: todayActivities[0].name,
+          type: todayActivities[0].type,
+          duration: todayActivities[0].duration ?? null,
+          distance: todayActivities[0].distance ?? null,
+          source: todayActivities[0].source,
+          startDate: todayActivities[0].startDate.toISOString(),
+        } : null,
       },
     });
   } catch (error) {

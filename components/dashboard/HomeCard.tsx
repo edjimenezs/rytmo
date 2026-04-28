@@ -39,6 +39,16 @@ interface PlanEntry {
   durationMinutes?: number | null;
 }
 
+interface TodayActivity {
+  id: string;
+  name: string;
+  type: string;
+  duration: number | null;
+  distance: number | null;
+  source: string;
+  startDate: string;
+}
+
 interface ScheduledWorkout {
   id: number;
   title: string;
@@ -108,6 +118,9 @@ export default function HomeCard() {
   const [checkinData, setCheckinData] = useState<CheckinRecord | null>(null);
   const [trainingTime, setTrainingTimeState] = useState<string | null>(null);
   const [settingTime, setSettingTime] = useState(false);
+  const [todayActivity, setTodayActivity] = useState<TodayActivity | null>(null);
+  const [dayType, setDayType] = useState<string | null>(null);
+  const [reasoning, setReasoning] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryDay[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -147,6 +160,9 @@ export default function HomeCard() {
           setPlanEntry(planData?.plan?.planEntry ?? null);
           setTrainingTimeState(planData?.plan?.trainingTime ?? null);
           if (planData?.plan?.hasGarminHealth) setHasCheckin(true);
+          setTodayActivity(planData?.plan?.todayActivity ?? null);
+          setDayType(planData?.plan?.dayType ?? null);
+          setReasoning(planData?.plan?.reasoning ?? null);
         }
       } catch { /* non-critical */ }
     } catch {
@@ -279,7 +295,32 @@ export default function HomeCard() {
         <div className="rounded-2xl bg-white shadow-sm p-5 space-y-4">
           {todayState === 'has_data' ? (
             <>
+              {/* dayType badge */}
+              {dayType && <DayTypeBadge dayType={dayType} />}
+
               <h2 className="text-2xl font-semibold text-gray-900">{headline ?? 'Plan listo'}</h2>
+
+              {/* Completed activity today */}
+              {todayActivity && (
+                <Link
+                  href={`/dashboard/activities/${todayActivity.id}`}
+                  className="flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5 hover:bg-gray-100 transition-colors"
+                >
+                  <span className="text-xl">{TYPE_ICON[todayActivity.type] ?? '⚡'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{todayActivity.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {[fmtDuration(todayActivity.duration), fmtDistance(todayActivity.distance)].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                  <span className="text-gray-300 text-sm">›</span>
+                </Link>
+              )}
+
+              {/* Reasoning — shown when dayType is rest/low to explain why */}
+              {(dayType === 'rest' || dayType === 'low') && reasoning && (
+                <p className="text-xs text-gray-400 line-clamp-2">{reasoning}</p>
+              )}
 
               {/* Scheduled workout: Garmin calendar or CSV plan entry */}
               {(scheduledWorkouts.length > 0 || planEntry) && (
@@ -419,6 +460,23 @@ function DayHistoryRow({ day }: { day: HistoryDay }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+const DAY_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
+  rest:     { label: 'Recuperación',    className: 'bg-gray-100 text-gray-500' },
+  low:      { label: 'Carga baja',      className: 'bg-green-100 text-green-700' },
+  moderate: { label: 'Carga moderada',  className: 'bg-yellow-100 text-yellow-700' },
+  high:     { label: 'Carga alta',      className: 'bg-orange-100 text-orange-700' },
+};
+
+function DayTypeBadge({ dayType }: { dayType: string }) {
+  const config = DAY_TYPE_CONFIG[dayType];
+  if (!config) return null;
+  return (
+    <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full ${config.className}`}>
+      {config.label}
+    </span>
   );
 }
 
