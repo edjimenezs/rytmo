@@ -243,7 +243,9 @@ export default function HomeCard() {
     }
   }
 
-  const timeOfDay = checkinData?.timeOfDay ?? trainingTime;
+  // Only show the badge when the user explicitly selected a time — not from plan defaults
+  const explicitTimeOfDay = checkinData?.timeOfDay ?? null;
+  const timeOfDay = explicitTimeOfDay;
 
   return (
     <div className="space-y-4">
