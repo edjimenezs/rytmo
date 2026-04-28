@@ -160,10 +160,32 @@ export default function HomeCard() {
     // Non-blocking: fetch Garmin calendar for today's scheduled workout
     fetch('/api/garmin/today-workout')
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.workouts?.length) {
-          setScheduledWorkouts(data.workouts);
-          setTodayState('has_data');
+      .then(async (data) => {
+        if (!data?.workouts?.length) return;
+        setScheduledWorkouts(data.workouts);
+        setTodayState('has_data');
+
+        // Map Garmin activity type → checkin trainingType for the nutrition engine
+        const w = data.workouts[0];
+        const typeMap: Record<string, string> = {
+          cycling: 'bike', indoor_cycling: 'bike', virtual_ride: 'bike',
+          running: 'run', trail_running: 'run',
+          swimming: 'swim', open_water_swimming: 'swim',
+          strength_training: 'strength', yoga: 'strength',
+        };
+        const trainingType = typeMap[w.activityTypeKey ?? ''] ?? 'strength';
+        const durationMin = w.durationSeconds ? Math.round(w.durationSeconds / 60) : null;
+
+        // Read latest checkin fresh to avoid stale closure
+        const checkinJson = await fetch('/api/checkin').then(r => r.ok ? r.json() : {}).catch(() => ({} as Record<string, unknown>));
+        const existing = (checkinJson as Record<string, unknown>)?.checkin as CheckinRecord | null;
+        if (!existing?.trainingType) {
+          await fetch('/api/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...existing, trainingType, durationMin }),
+          }).catch(() => {});
+          await loadToday();
         }
       })
       .catch(() => {});
