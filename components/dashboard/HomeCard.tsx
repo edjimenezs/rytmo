@@ -32,6 +32,26 @@ interface HistoryDay {
   plan: DayPlan | null;
 }
 
+interface PlanEntry {
+  id: string;
+  title: string;
+  sessionType: string;
+  durationMinutes?: number | null;
+}
+
+interface CheckinRecord {
+  sleepHours?: number | null;
+  sleepQuality?: number | null;
+  fatigue?: number | null;
+  hunger?: number | null;
+  stress?: number | null;
+  trainingType?: string | null;
+  durationMin?: number | null;
+  intensity?: string | null;
+  timeOfDay?: string | null;
+  notes?: string | null;
+}
+
 const TYPE_ICON: Record<string, string> = {
   RUNNING: '🏃',
   CYCLING: '🚴',
@@ -40,6 +60,12 @@ const TYPE_ICON: Record<string, string> = {
   WEIGHTLIFTING: '🏋️',
   YOGA: '🧘',
   OTHER: '⚡',
+};
+
+const TIME_LABELS: Record<string, string> = {
+  morning: 'Mañana',
+  midday: 'Mediodía',
+  evening: 'Tarde',
 };
 
 function fmtDuration(seconds: number | null): string {
@@ -69,6 +95,10 @@ export default function HomeCard() {
   const [todayState, setTodayState] = useState<'loading' | 'has_data' | 'no_data'>('loading');
   const [headline, setHeadline] = useState<string | null>(null);
   const [hasCheckin, setHasCheckin] = useState(false);
+  const [planEntry, setPlanEntry] = useState<PlanEntry | null>(null);
+  const [checkinData, setCheckinData] = useState<CheckinRecord | null>(null);
+  const [trainingTime, setTrainingTimeState] = useState<string | null>(null);
+  const [settingTime, setSettingTime] = useState(false);
   const [history, setHistory] = useState<HistoryDay[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -92,11 +122,12 @@ export default function HomeCard() {
         fetch('/api/checkin'),
         fetch('/api/checkin/from-activity'),
       ]);
-      const checkinData = await checkinRes.json().catch(() => ({}));
+      const checkinJson = await checkinRes.json().catch(() => ({}));
       const activityData = await activityRes.json().catch(() => ({}));
-      const checkin = !!checkinData?.checkin;
+      const checkin = !!checkinJson?.checkin;
       const hasActivity = !!activityData?.activity;
       setHasCheckin(checkin);
+      setCheckinData(checkinJson?.checkin ?? null);
       setTodayState(checkin || hasActivity ? 'has_data' : 'no_data');
 
       try {
@@ -104,6 +135,8 @@ export default function HomeCard() {
         if (planRes.ok) {
           const planData = await planRes.json();
           setHeadline(planData?.plan?.aiHeadline ?? planData?.plan?.summary ?? null);
+          setPlanEntry(planData?.plan?.planEntry ?? null);
+          setTrainingTimeState(planData?.plan?.trainingTime ?? null);
         }
       } catch { /* non-critical */ }
     } catch {
@@ -115,6 +148,20 @@ export default function HomeCard() {
     loadToday();
     loadHistory();
   }, [loadToday, loadHistory]);
+
+  async function handleSetTrainingTime(time: 'morning' | 'midday' | 'evening') {
+    setSettingTime(true);
+    try {
+      await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...checkinData, timeOfDay: time }),
+      });
+      await loadToday();
+    } catch { /* non-critical */ } finally {
+      setSettingTime(false);
+    }
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -158,7 +205,6 @@ export default function HomeCard() {
         if (stravaOk) parts.push(`Strava: ${stravaCount} actividades`);
         else parts.push(`Strava: error${stravaErr ? ` (${stravaErr})` : ''}`);
         setSyncMsg(parts.join(' · '));
-        // Reload data
         setHistoryLoading(true);
         setTodayState('loading');
         await Promise.all([loadToday(), loadHistory()]);
@@ -175,6 +221,8 @@ export default function HomeCard() {
     }
   }
 
+  const timeOfDay = checkinData?.timeOfDay ?? trainingTime;
+
   return (
     <div className="space-y-4">
       {/* Today card */}
@@ -185,6 +233,41 @@ export default function HomeCard() {
           {todayState === 'has_data' ? (
             <>
               <h2 className="text-2xl font-semibold text-gray-900">{headline ?? 'Plan listo'}</h2>
+
+              {/* Training plan entry summary */}
+              {planEntry && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">
+                    {planEntry.sessionType} · {planEntry.title}
+                    {planEntry.durationMinutes ? ` · ${Math.round(planEntry.durationMinutes)} min` : ''}
+                    {timeOfDay && (
+                      <span className="ml-2 inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {TIME_LABELS[timeOfDay] ?? timeOfDay}
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Time selector — only show if timeOfDay not yet set */}
+                  {!timeOfDay && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
+                      <div className="flex gap-2">
+                        {(['morning', 'midday', 'evening'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => handleSetTrainingTime(t)}
+                            disabled={settingTime}
+                            className="flex-1 text-sm py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors disabled:opacity-50"
+                          >
+                            {TIME_LABELS[t]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Link
                 href="/plan"
                 className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors"
@@ -268,8 +351,12 @@ function DayHistoryRow({ day }: { day: HistoryDay }) {
   const headline = day.plan?.aiHeadline ?? day.plan?.summary ?? null;
   const dayLabel = fmtDate(day.date);
 
+  const href = mainActivity
+    ? `/dashboard/activities/${mainActivity.id}`
+    : `/plan?date=${day.date}`;
+
   return (
-    <Link href={`/plan?date=${day.date}`} className="block">
+    <Link href={href} className="block">
       <div className="rounded-xl bg-white shadow-sm px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors">
         <span className="text-2xl mt-0.5">{icon}</span>
         <div className="flex-1 min-w-0">

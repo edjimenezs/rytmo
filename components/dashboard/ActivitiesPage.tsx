@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import format from 'date-fns/format';
 import Link from 'next/link';
+
 import type { Session } from 'next-auth';
 
 interface Activity {
@@ -205,9 +206,10 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
                 {activities.map((activity) => {
                   const sourceBadge = getSourceBadge(activity.source);
                   return (
-                    <div
+                    <Link
                       key={activity.id}
-                      className={`p-6 hover:bg-gray-50 transition-colors ${
+                      href={`/dashboard/activities/${activity.id}`}
+                      className={`block p-6 hover:bg-gray-50 transition-colors ${
                         activity.source === 'STRAVA'
                           ? 'border-l-4 border-orange-500'
                           : 'border-l-4 border-blue-500'
@@ -299,7 +301,7 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

@@ -58,15 +58,22 @@ export async function GET(req: NextRequest) {
       }),
       prisma.trainingActivity.findMany({
         where: { userId, startDate: { gte: normalizedDate, lt: nextDate } },
-        select: { type: true, duration: true, averageHeartRate: true },
+        select: { type: true, duration: true, averageHeartRate: true, startDate: true },
         orderBy: { startDate: 'asc' },
       }),
     ]);
 
     const { atl, ctl, acwr } = calcularAtlCtlAcwr(loadsRaw);
 
+    let activityTrainingTime: 'morning' | 'midday' | 'evening' | null = null;
+    if (todayActivities.length > 0) {
+      const hour = new Date(todayActivities[0].startDate).getUTCHours();
+      activityTrainingTime = hour < 12 ? 'morning' : hour < 17 ? 'midday' : 'evening';
+    }
+
     const trainingTime: 'morning' | 'midday' | 'evening' =
       (checkin?.timeOfDay as 'morning' | 'midday' | 'evening' | null) ??
+      activityTrainingTime ??
       (profile?.defaultTrainingTime as 'morning' | 'midday' | 'evening' | null) ??
       'morning';
 
