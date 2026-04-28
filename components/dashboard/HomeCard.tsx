@@ -209,10 +209,13 @@ export default function HomeCard() {
         setTodayState('loading');
         await Promise.all([loadToday(), loadHistory()]);
       } else {
-        const errParts = [];
-        if (garminErr) errParts.push(`Garmin: ${garminErr}`);
-        if (stravaErr) errParts.push(`Strava: ${stravaErr}`);
-        setSyncMsg(`Error: ${errParts.join(' · ') || 'ambas integraciones fallaron'}`);
+        const garminMsg = garminRes.status === 'rejected'
+          ? 'sin respuesta'
+          : (garminErr || 'falló');
+        const stravaMsg = stravaRes.status === 'rejected'
+          ? 'sin respuesta'
+          : (stravaErr || 'falló');
+        setSyncMsg(`Garmin: ${garminMsg} · Strava: ${stravaMsg}`);
       }
     } catch (e) {
       setSyncMsg(`Error: ${e instanceof Error ? e.message : 'desconocido'}`);
