@@ -146,6 +146,7 @@ export default function HomeCard() {
           setHeadline(planData?.plan?.aiHeadline ?? planData?.plan?.summary ?? null);
           setPlanEntry(planData?.plan?.planEntry ?? null);
           setTrainingTimeState(planData?.plan?.trainingTime ?? null);
+          if (planData?.plan?.hasGarminHealth) setHasCheckin(true);
         }
       } catch { /* non-critical */ }
     } catch {
