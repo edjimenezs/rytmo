@@ -39,6 +39,14 @@ interface PlanEntry {
   durationMinutes?: number | null;
 }
 
+interface ScheduledWorkout {
+  id: number;
+  title: string;
+  date: string;
+  durationSeconds?: number;
+  activityTypeKey?: string;
+}
+
 interface CheckinRecord {
   sleepHours?: number | null;
   sleepQuality?: number | null;
@@ -96,6 +104,7 @@ export default function HomeCard() {
   const [headline, setHeadline] = useState<string | null>(null);
   const [hasCheckin, setHasCheckin] = useState(false);
   const [planEntry, setPlanEntry] = useState<PlanEntry | null>(null);
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>([]);
   const [checkinData, setCheckinData] = useState<CheckinRecord | null>(null);
   const [trainingTime, setTrainingTimeState] = useState<string | null>(null);
   const [settingTime, setSettingTime] = useState(false);
@@ -147,6 +156,16 @@ export default function HomeCard() {
   useEffect(() => {
     loadToday();
     loadHistory();
+    // Non-blocking: fetch Garmin calendar for today's scheduled workout
+    fetch('/api/garmin/today-workout')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.workouts?.length) {
+          setScheduledWorkouts(data.workouts);
+          setTodayState('has_data');
+        }
+      })
+      .catch(() => {});
   }, [loadToday, loadHistory]);
 
   async function handleSetTrainingTime(time: 'morning' | 'midday' | 'evening') {
@@ -236,6 +255,43 @@ export default function HomeCard() {
           {todayState === 'has_data' ? (
             <>
               <h2 className="text-2xl font-semibold text-gray-900">{headline ?? 'Plan listo'}</h2>
+
+              {/* Garmin calendar: scheduled workouts from TrainingPeaks */}
+              {!planEntry && scheduledWorkouts.length > 0 && (
+                <div className="space-y-2">
+                  {scheduledWorkouts.map((w) => (
+                    <p key={w.id} className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <span>{TYPE_ICON[w.activityTypeKey?.toUpperCase() ?? ''] ?? '🏋️'}</span>
+                      <span>
+                        {w.title}
+                        {w.durationSeconds ? ` · ${fmtDuration(w.durationSeconds)}` : ''}
+                      </span>
+                      {timeOfDay && (
+                        <span className="ml-1 inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                          {TIME_LABELS[timeOfDay] ?? timeOfDay}
+                        </span>
+                      )}
+                    </p>
+                  ))}
+                  {!timeOfDay && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
+                      <div className="flex gap-2">
+                        {(['morning', 'midday', 'evening'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => handleSetTrainingTime(t)}
+                            disabled={settingTime}
+                            className="flex-1 text-sm py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors disabled:opacity-50"
+                          >
+                            {TIME_LABELS[t]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Training plan entry summary */}
               {planEntry && (

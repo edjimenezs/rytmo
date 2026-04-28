@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { GarminAuth, type OAuth1Token, type OAuth2Token, type GarminProfile } from './auth';
 import {
+  CALENDAR_MONTH_ENDPOINT,
   ACTIVITIES_SEARCH_ENDPOINT,
   ACTIVITY_ENDPOINT,
   ACTIVITY_DETAILS_SUBPATH,
@@ -169,6 +170,11 @@ export class GarminClient {
 
   async getRacePredictions(): Promise<unknown> {
     return this.auth.request(`${RACE_PREDICTIONS_ENDPOINT}/latest/${this.displayName}`);
+  }
+
+  async getCalendarMonth(year: number, month: number): Promise<unknown> {
+    // month is 1-indexed (January = 1)
+    return this.auth.request(`${CALENDAR_MONTH_ENDPOINT}/${year}/month/${month}`);
   }
 
   async getDailyHealthSnapshot(date?: string): Promise<Record<string, unknown>> {

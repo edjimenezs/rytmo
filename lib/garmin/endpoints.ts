@@ -1,3 +1,4 @@
+export const CALENDAR_MONTH_ENDPOINT = '/calendar-service/year';
 export const USER_SUMMARY_ENDPOINT = '/usersummary-service/usersummary/daily';
 export const HEART_RATE_ENDPOINT = '/wellness-service/wellness/dailyHeartRate';
 export const STEPS_CHART_ENDPOINT = '/wellness-service/wellness/dailySummaryChart';
