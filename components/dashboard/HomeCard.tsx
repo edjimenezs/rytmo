@@ -266,9 +266,9 @@ export default function HomeCard() {
     }
   }
 
-  // Only show the badge when the user explicitly selected a time — not from plan defaults
-  const explicitTimeOfDay = checkinData?.timeOfDay ?? null;
-  const timeOfDay = explicitTimeOfDay;
+  const timeOfDay = checkinData?.timeOfDay ?? null;
+  const hasScheduled = scheduledWorkouts.length > 0 || !!planEntry;
+  const hasManualTrainingType = !!checkinData?.trainingType;
 
   return (
     <div className="space-y-4">
@@ -281,75 +281,27 @@ export default function HomeCard() {
             <>
               <h2 className="text-2xl font-semibold text-gray-900">{headline ?? 'Plan listo'}</h2>
 
-              {/* Garmin calendar: scheduled workouts from TrainingPeaks */}
-              {!planEntry && scheduledWorkouts.length > 0 && (
-                <div className="space-y-2">
-                  {scheduledWorkouts.map((w) => (
-                    <p key={w.id} className="text-sm text-gray-500 flex items-center gap-1.5">
+              {/* Scheduled workout: Garmin calendar or CSV plan entry */}
+              {(scheduledWorkouts.length > 0 || planEntry) && (
+                <p className="text-sm text-gray-500 flex items-center gap-1.5 flex-wrap">
+                  {planEntry ? (
+                    <><span>📋</span><span>{planEntry.sessionType} · {planEntry.title}{planEntry.durationMinutes ? ` · ${Math.round(planEntry.durationMinutes)} min` : ''}</span></>
+                  ) : scheduledWorkouts.map((w) => (
+                    <span key={w.id} className="flex items-center gap-1.5">
                       <span>{TYPE_ICON[w.activityTypeKey?.toUpperCase() ?? ''] ?? '🏋️'}</span>
-                      <span>
-                        {w.title}
-                        {w.durationSeconds ? ` · ${fmtDuration(w.durationSeconds)}` : ''}
-                      </span>
-                      {timeOfDay && (
-                        <span className="ml-1 inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                          {TIME_LABELS[timeOfDay] ?? timeOfDay}
-                        </span>
-                      )}
-                    </p>
+                      <span>{w.title}{w.durationSeconds ? ` · ${fmtDuration(w.durationSeconds)}` : ''}</span>
+                    </span>
                   ))}
-                  {!timeOfDay && (
-                    <div className="space-y-1.5">
-                      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
-                      <div className="flex gap-2">
-                        {(['morning', 'midday', 'evening'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => handleSetTrainingTime(t)}
-                            disabled={settingTime}
-                            className="flex-1 text-sm py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors disabled:opacity-50"
-                          >
-                            {TIME_LABELS[t]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </p>
               )}
 
-              {/* Training plan entry summary */}
-              {planEntry && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">
-                    {planEntry.sessionType} · {planEntry.title}
-                    {planEntry.durationMinutes ? ` · ${Math.round(planEntry.durationMinutes)} min` : ''}
-                    {timeOfDay && (
-                      <span className="ml-2 inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                        {TIME_LABELS[timeOfDay] ?? timeOfDay}
-                      </span>
-                    )}
-                  </p>
-
-                  {/* Time selector — only show if timeOfDay not yet set */}
-                  {!timeOfDay && (
-                    <div className="space-y-1.5">
-                      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
-                      <div className="flex gap-2">
-                        {(['morning', 'midday', 'evening'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => handleSetTrainingTime(t)}
-                            disabled={settingTime}
-                            className="flex-1 text-sm py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors disabled:opacity-50"
-                          >
-                            {TIME_LABELS[t]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Time selector — always visible, highlights current selection */}
+              {(hasScheduled || hasManualTrainingType) && (
+                <TimeSelector
+                  current={timeOfDay}
+                  disabled={settingTime}
+                  onSelect={handleSetTrainingTime}
+                />
               )}
 
               <Link
@@ -365,18 +317,16 @@ export default function HomeCard() {
               )}
             </>
           ) : (
-            <>
-              <p className="text-base text-gray-500">Sin actividad registrada hoy</p>
-              <Link
-                href="/plan"
-                className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors"
-              >
-                Ver plan del día
-              </Link>
-              <Link href="/checkin" className="block w-full text-center text-sm text-gray-500 hover:text-gray-700">
-                Registrar check-in →
-              </Link>
-            </>
+            /* No activity yet — show manual workout planner */
+            <WorkoutPlanner onSave={async (type, durationMin, time) => {
+              await fetch('/api/checkin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...checkinData, trainingType: type, durationMin, timeOfDay: time }),
+              }).catch(() => {});
+              setTodayState('loading');
+              await loadToday();
+            }} />
           )}
         </div>
       )}
@@ -469,5 +419,137 @@ function DayHistoryRow({ day }: { day: HistoryDay }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function TimeSelector({
+  current,
+  disabled,
+  onSelect,
+}: {
+  current: string | null;
+  disabled: boolean;
+  onSelect: (t: 'morning' | 'midday' | 'evening') => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
+      <div className="flex gap-2">
+        {(['morning', 'midday', 'evening'] as const).map((t) => {
+          const active = current === t;
+          return (
+            <button
+              key={t}
+              onClick={() => onSelect(t)}
+              disabled={disabled}
+              className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors disabled:opacity-50 ${
+                active
+                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
+                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
+              }`}
+            >
+              {TIME_LABELS[t]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const WORKOUT_TYPES = [
+  { key: 'run', label: 'Trote', icon: '🏃' },
+  { key: 'bike', label: 'Bici', icon: '🚴' },
+  { key: 'swim', label: 'Nado', icon: '🏊' },
+  { key: 'strength', label: 'Fuerza', icon: '🏋️' },
+];
+
+const DURATION_OPTIONS = [30, 45, 60, 90];
+
+function WorkoutPlanner({ onSave }: {
+  onSave: (type: string, durationMin: number, time: 'morning' | 'midday' | 'evening') => Promise<void>;
+}) {
+  const [type, setType] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [time, setTime] = useState<'morning' | 'midday' | 'evening' | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const canSave = !!type && !!duration && !!time;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-base text-gray-500">¿Qué entrenas hoy?</p>
+
+      {/* Workout type */}
+      <div className="grid grid-cols-4 gap-2">
+        {WORKOUT_TYPES.map((w) => (
+          <button
+            key={w.key}
+            onClick={() => setType(w.key)}
+            className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border transition-colors text-xs font-medium ${
+              type === w.key
+                ? 'bg-blue-600 border-blue-600 text-white'
+                : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+            }`}
+          >
+            <span className="text-xl">{w.icon}</span>
+            {w.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Duration */}
+      <div className="space-y-1.5">
+        <p className="text-xs text-gray-400">Duración estimada</p>
+        <div className="flex gap-2">
+          {DURATION_OPTIONS.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDuration(d)}
+              className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors ${
+                duration === d
+                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
+                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+              }`}
+            >
+              {d} min
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Time of day */}
+      <div className="space-y-1.5">
+        <p className="text-xs text-gray-400">¿A qué hora?</p>
+        <div className="flex gap-2">
+          {(['morning', 'midday', 'evening'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTime(t)}
+              className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors ${
+                time === t
+                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
+                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+              }`}
+            >
+              {TIME_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={async () => {
+          if (!canSave) return;
+          setSaving(true);
+          await onSave(type!, duration!, time!);
+          setSaving(false);
+        }}
+        disabled={!canSave || saving}
+        className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-40"
+      >
+        {saving ? 'Generando plan…' : 'Ver mi plan'}
+      </button>
+    </div>
   );
 }
