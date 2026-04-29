@@ -60,6 +60,54 @@ export const DAY_TYPE_THRESHOLDS = {
 } as const;
 
 /**
+ * Activity types mapped to baseline sweat rates (L/hour).
+ * Sources: Vitale & Getzin 2019 (PMC6628334).
+ */
+const SWEAT_RATE_BASE_L_PER_H: Record<string, number> = {
+  run:      1.1,
+  bike:     0.9,
+  swim:     0.6,
+  strength: 0.5,
+};
+
+/**
+ * Estimates calorie burn from a session using the Keytel et al. formula (adjusted for sex = male baseline).
+ * Inputs: averageHR (bpm), weightKg, durationMin, ageYears (default 30 if unknown).
+ * Returns kcal or null if inputs are insufficient.
+ */
+export function estimateKcalBurned(
+  averageHR: number | null,
+  weightKg: number | null,
+  durationMin: number,
+  ageYears: number = 30
+): number | null {
+  if (!averageHR || !weightKg || durationMin <= 0) return null;
+  const kcal = ((-55.0969 + 0.6309 * averageHR + 0.1988 * weightKg + 0.2017 * ageYears) / 4.184) * durationMin;
+  return Math.max(0, Math.round(kcal));
+}
+
+/**
+ * Estimates fluid loss (L) during a session based on activity type and duration.
+ * Optional ambient temperature adjustment: +0.3 L/h per 10°C above 20°C (Vitale 2019).
+ */
+export function estimateSweatLoss(
+  durationMin: number,
+  activityType: string,
+  ambientTempC: number | null = null
+): { liters: number; label: string } {
+  const baseRate = SWEAT_RATE_BASE_L_PER_H[activityType.toLowerCase()] ?? 0.8;
+  const tempBonus = ambientTempC != null && ambientTempC > 20
+    ? 0.3 * Math.floor((ambientTempC - 20) / 10)
+    : 0;
+  const rate = baseRate + tempBonus;
+  const liters = Math.round((durationMin / 60) * rate * 10) / 10;
+  return {
+    liters,
+    label: `~${liters} L${ambientTempC != null ? ` (${ambientTempC}°C ambiente)` : ''}`,
+  };
+}
+
+/**
  * Returns a human-readable reasoning string based on session parameters.
  */
 export function buildIntraReasoning(durationMin: number, requiresIntra: boolean): string {

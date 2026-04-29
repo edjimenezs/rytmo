@@ -74,7 +74,8 @@ const PHRASING_SYSTEM_PROMPT = `Eres un coach de nutricion deportiva cercano. Ha
 export async function generateMomentPhrasing(
   plan: NutritionPlanResponse,
   checkin: CheckinInput | null,
-  trainingTime: 'morning' | 'midday' | 'evening'
+  trainingTime: 'morning' | 'midday' | 'evening',
+  isTestUser: boolean = false
 ): Promise<{ headline: string; moments: Record<NutritionMoment, string> } | null> {
   try {
     const momentKeys: NutritionMoment[] = ['preWorkout', 'intraWorkout', 'postWorkout', 'snack', 'dinner'];
@@ -105,6 +106,7 @@ Resumen del dia: ${plan.summary}
 Tipo de dia: ${plan.dayType}
 Foco: ${plan.focus ?? 'general'}
 Hora de entrenamiento: ${trainingTime}
+Razonamiento cientifico: ${plan.reasoning}
 
 Alimentos por momento:
 ${momentsSummary}
@@ -113,9 +115,13 @@ Check-in del atleta: ${checkinSummary}
 
 Responde SOLO con el JSON pedido.`;
 
+    // AI_TIER=test or isTestUser flag → haiku (4× cheaper); production → sonnet
+    const isTestTier = process.env.AI_TIER === 'test' || isTestUser;
+    const model = isTestTier ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6-20250514';
+
     const result = await askLLM(prompt, {
       provider: 'anthropic',
-      model: 'claude-sonnet-4-5-20250514',
+      model,
       system: PHRASING_SYSTEM_PROMPT,
     });
 
