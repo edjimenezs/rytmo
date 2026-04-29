@@ -41,7 +41,10 @@ export async function GET(req: NextRequest) {
     const nextDate = new Date(normalizedDate);
     nextDate.setUTCDate(nextDate.getUTCDate() + 1);
 
-    const [loadsRaw, planEntry, checkin, garminHealth, profile, todayActivities] = await Promise.all([
+    const sixtyDaysAgo = new Date(normalizedDate);
+    sixtyDaysAgo.setUTCDate(sixtyDaysAgo.getUTCDate() - 60);
+
+    const [loadsRaw, planEntry, checkin, garminHealth, profile, todayActivities, existingRec, foodHistory] = await Promise.all([
       getDailyLoads(userId, 60),
       findTrainingPlanEntryForDate(userId, normalizedDate),
       prisma.dailyCheckin.findUnique({
@@ -54,14 +57,29 @@ export async function GET(req: NextRequest) {
       }),
       prisma.profile.findUnique({
         where: { userId },
-        select: { defaultTrainingTime: true, weight: true },
+        select: { defaultTrainingTime: true, weight: true, isTestUser: true },
       }),
       prisma.trainingActivity.findMany({
         where: { userId, startDate: { gte: normalizedDate, lt: nextDate } },
         select: { id: true, name: true, type: true, duration: true, distance: true, source: true, averageHeartRate: true, startDate: true },
         orderBy: { startDate: 'asc' },
       }),
+      prisma.dailyRecommendation.findUnique({
+        where: { userId_date: { userId, date: normalizedDate } },
+        select: { aiHeadline: true, aiMomentTexts: true, dayType: true, focus: true },
+      }),
+      prisma.foodLog.groupBy({
+        by: ['foodName', 'moment'],
+        where: { userId, wasRecommended: true, foodName: { not: null }, date: { gte: sixtyDaysAgo } },
+        _count: { foodName: true },
+      }),
     ]);
+
+    // Build preference score map: foodName → times confirmed eaten
+    const preferenceScores = new Map<string, number>();
+    for (const row of foodHistory) {
+      if (row.foodName) preferenceScores.set(row.foodName, row._count.foodName);
+    }
 
     const { atl, ctl, acwr } = calcularAtlCtlAcwr(loadsRaw);
 
@@ -96,6 +114,14 @@ export async function GET(req: NextRequest) {
       activityIntensity = avgHr == null ? 'Moderate' : avgHr < 130 ? 'Low' : avgHr <= 155 ? 'Moderate' : 'High';
     }
 
+    // Average HR from today's activities (for kcal estimation)
+    const activityAvgHr = (() => {
+      const validHr = todayActivities.filter(a => a.averageHeartRate != null);
+      return validHr.length > 0
+        ? validHr.reduce((s, a) => s + (a.averageHeartRate ?? 0), 0) / validHr.length
+        : null;
+    })();
+
     // Merge: manual checkin > derived from activities > Garmin health
     const mergedCheckin = {
       ...checkin,
@@ -106,6 +132,7 @@ export async function GET(req: NextRequest) {
       bodyBattery: garminHealth?.bodyBatteryCharged ?? null,
       trainingReadiness: garminHealth?.trainingReadiness ?? null,
       hrvStatus: garminHealth?.hrvStatus ?? null,
+      averageHR: activityAvgHr,
     };
 
     // When no training info available, use ACWR to infer a reasonable default day type
@@ -124,6 +151,7 @@ export async function GET(req: NextRequest) {
       checkin: mergedCheckin,
       userWeightKg: profile?.weight ?? null,
       defaultDayType,
+      preferenceScores,
     });
 
     const payload = {
@@ -148,6 +176,11 @@ export async function GET(req: NextRequest) {
       foodReferences: planEntry?.title ?? null,
     };
 
+    // Only clear AI phrasing if the underlying plan changed (dayType or focus differs)
+    const phrasingKey = `${planResponse.dayType}|${planResponse.focus ?? ''}|${mergedCheckin.fatigue ?? ''}|${mergedCheckin.sleepHours ?? ''}|${mergedCheckin.trainingType ?? ''}|${mergedCheckin.intensity ?? ''}`;
+    const existingPhrKey = `${existingRec?.dayType ?? ''}|${existingRec?.focus ?? ''}|${mergedCheckin.fatigue ?? ''}|${mergedCheckin.sleepHours ?? ''}|${mergedCheckin.trainingType ?? ''}|${mergedCheckin.intensity ?? ''}`;
+    const phrasingStale = !existingRec?.aiHeadline || phrasingKey !== existingPhrKey;
+
     const plan = await prisma.dailyRecommendation.upsert({
       where: {
         userId_date: {
@@ -155,7 +188,9 @@ export async function GET(req: NextRequest) {
           date: normalizedDate,
         },
       },
-      update: { ...payload, aiHeadline: null, aiMomentTexts: Prisma.JsonNull },
+      update: phrasingStale
+        ? { ...payload, aiHeadline: null, aiMomentTexts: Prisma.JsonNull }
+        : { ...payload },
       create: {
         userId,
         date: normalizedDate,
@@ -163,12 +198,13 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // AI phrasing: always regenerate (cleared on update above)
-    let aiHeadline = plan.aiHeadline;
-    let aiMomentTexts = plan.aiMomentTexts as Record<string, string> | null;
+    // AI phrasing: regenerate only when stale or missing
+    let aiHeadline = phrasingStale ? null : (existingRec?.aiHeadline ?? null);
+    let aiMomentTexts = phrasingStale ? null : (existingRec?.aiMomentTexts as Record<string, string> | null);
 
     if (!aiHeadline) {
-      const aiResult = await generateMomentPhrasing(planResponse, checkin ?? null, trainingTime);
+      const isTestUser = profile?.isTestUser ?? false;
+      const aiResult = await generateMomentPhrasing(planResponse, checkin ?? null, trainingTime, isTestUser);
       const phrasing = aiResult ?? deterministicFallback(planResponse, trainingTime);
 
       aiHeadline = phrasing.headline;
