@@ -25,6 +25,7 @@ export async function GET(
         averageHeartRate: true,
         maxHeartRate: true,
         averagePace: true,
+        averagePower: true,
         startDate: true,
         endDate: true,
         description: true,

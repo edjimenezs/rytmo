@@ -17,6 +17,7 @@ interface Activity {
   averageHeartRate: number | null;
   maxHeartRate: number | null;
   averagePace: number | null;
+  averagePower: number | null;
   startDate: string;
   endDate: string | null;
   description: string | null;
@@ -127,6 +128,9 @@ export default function ActivityDetailView({ activityId }: { activityId: string 
     ...(activity.distance ? [{ label: 'Distancia', value: fmtDistance(activity.distance) }] : []),
     ...(cycling && activity.distance && activity.duration
       ? [{ label: 'Velocidad', value: fmtSpeed(activity.distance, activity.duration) }]
+      : []),
+    ...(cycling && activity.averagePower
+      ? [{ label: 'Potencia', value: `${activity.averagePower} W` }]
       : []),
     ...(!cycling && !swimming && activity.averagePace
       ? [{ label: 'Paso medio', value: fmtPace(activity.averagePace) }]

@@ -241,6 +241,7 @@ model TrainingActivity {
   averageHeartRate Int?
   maxHeartRate     Int?
   averagePace      Float? // in min/km
+  averagePower     Int?   // in watts (cycling)
 
   // Timing
   startDate DateTime

@@ -75,9 +75,10 @@ export async function syncStravaActivity(userId: string, stravaActivity: StravaA
         calories: stravaActivity.calories || null,
         averageHeartRate: stravaActivity.average_heartrate || null,
         maxHeartRate: stravaActivity.max_heartrate || null,
-        averagePace: stravaActivity.average_speed > 0 
-          ? (1000 / 60) / stravaActivity.average_speed 
+        averagePace: stravaActivity.average_speed > 0
+          ? (1000 / 60) / stravaActivity.average_speed
           : null,
+        averagePower: stravaActivity.average_watts || stravaActivity.weighted_average_watts || null,
         startDate: new Date(stravaActivity.start_date),
         endDate: new Date(new Date(stravaActivity.start_date).getTime() + stravaActivity.elapsed_time * 1000),
         updatedAt: new Date(),
@@ -97,9 +98,10 @@ export async function syncStravaActivity(userId: string, stravaActivity: StravaA
         calories: stravaActivity.calories || null,
         averageHeartRate: stravaActivity.average_heartrate || null,
         maxHeartRate: stravaActivity.max_heartrate || null,
-        averagePace: stravaActivity.average_speed > 0 
-          ? (1000 / 60) / stravaActivity.average_speed 
+        averagePace: stravaActivity.average_speed > 0
+          ? (1000 / 60) / stravaActivity.average_speed
           : null,
+        averagePower: stravaActivity.average_watts || stravaActivity.weighted_average_watts || null,
         startDate: new Date(stravaActivity.start_date),
         endDate: new Date(new Date(stravaActivity.start_date).getTime() + stravaActivity.elapsed_time * 1000),
       },
