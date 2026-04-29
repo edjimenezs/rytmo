@@ -10,6 +10,8 @@ import {
   POST_CARBS_G_PER_KG,
   buildIntraReasoning,
   buildPersonalizedPostReasoning,
+  estimateKcalBurned,
+  estimateSweatLoss,
 } from "./fueling-rules";
 import type { TrainingActivity } from "@prisma/client";
 
@@ -22,6 +24,7 @@ type CheckinInput = {
   bodyBattery?: number | null;       // 0–100 Garmin body battery (charged)
   trainingReadiness?: number | null; // 0–100 Garmin training readiness
   hrvStatus?: string | null;         // BALANCED | LOW | UNBALANCED
+  averageHR?: number | null;         // bpm from activity (for kcal estimation)
 };
 
 function downgradeDayType(dt: string): string {
@@ -148,7 +151,12 @@ const canonicalDayType = (planEntry?: NutritionPlanEntry, checkin?: CheckinInput
   return fromCheckin;
 };
 
-const pickFoods = (moment: NutritionMoment, focus: string | null, daySeed: number = 0): FoodOption[] => {
+const pickFoods = (
+  moment: NutritionMoment,
+  focus: string | null,
+  daySeed: number = 0,
+  preferenceScores: Map<string, number> = new Map()
+): FoodOption[] => {
   const candidates = foodCatalog.filter((option) => {
     if (option.moment !== moment) return false;
     if (focus && !option.focus.includes(focus)) return false;
@@ -158,11 +166,20 @@ const pickFoods = (moment: NutritionMoment, focus: string | null, daySeed: numbe
     ? candidates
     : foodCatalog.filter((option) => option.moment === moment);
   if (pool.length <= 3) return pool;
-  // Rotate selection based on day seed so different days get different foods
-  const offset = daySeed % pool.length;
-  const picked: FoodOption[] = [];
-  for (let i = 0; i < 3; i++) {
-    picked.push(pool[(offset + i) % pool.length]);
+
+  // Sort: foods the user has confirmed eating rise to top, then rotate the rest by daySeed
+  const withScores = pool.map((f) => ({ f, score: preferenceScores.get(f.name) ?? 0 }));
+  withScores.sort((a, b) => b.score - a.score || 0);
+  const preferred = withScores.filter((x) => x.score > 0).map((x) => x.f);
+  const rest = withScores.filter((x) => x.score === 0).map((x) => x.f);
+
+  // Fill up to 3: preferred first, then rotate from rest by daySeed
+  const picked: FoodOption[] = preferred.slice(0, 3);
+  if (picked.length < 3 && rest.length > 0) {
+    const offset = daySeed % rest.length;
+    for (let i = 0; picked.length < 3 && i < rest.length; i++) {
+      picked.push(rest[(offset + i) % rest.length]);
+    }
   }
   return picked;
 };
@@ -183,8 +200,10 @@ export function buildNutritionPlan(params: {
   checkin?: CheckinInput;
   userWeightKg?: number | null;
   defaultDayType?: string;
+  preferenceScores?: Map<string, number>;
 }) {
   const { planEntry, loads } = params;
+  const preferenceScores = params.preferenceScores ?? new Map<string, number>();
 
   const baseDayType = canonicalDayType(planEntry, params.checkin, params.defaultDayType);
   const baseFocus = planEntry?.focus ?? (baseDayType === "rest" ? "maintenance" : null);
@@ -198,14 +217,19 @@ export function buildNutritionPlan(params: {
 
   const entryLabel = sessionLabel(planEntry);
 
-  // Day-based seed for food rotation (different foods each day)
+  // Seed includes date + activity type + duration bucket so each unique workout
+  // shows different foods even on the same calendar day
   const today = new Date();
-  const daySeed = today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate();
+  const activityHash = (params.checkin?.trainingType ?? '')
+    .split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const durationBucket = durationMin >= 90 ? 3 : durationMin >= 45 ? 2 : durationMin > 0 ? 1 : 0;
+  const daySeed = today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()
+    + activityHash * 7 + durationBucket * 31;
 
-  const preFoods = pickFoods("preWorkout", focus, daySeed);
-  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus, daySeed) : [];
-  const postFoods = pickFoods("postWorkout", focus, daySeed);
-  const dinnerFoods = pickFoods("dinner", focus, daySeed);
+  const preFoods = pickFoods("preWorkout", focus, daySeed, preferenceScores);
+  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus, daySeed, preferenceScores) : [];
+  const postFoods = pickFoods("postWorkout", focus, daySeed, preferenceScores);
+  const dinnerFoods = pickFoods("dinner", focus, daySeed, preferenceScores);
 
   const summary = planEntry
     ? `Hoy la sesión es ${entryLabel} con una carga ${dayType}.`
@@ -213,8 +237,17 @@ export function buildNutritionPlan(params: {
   const sodiumNote = durationMin >= SODIUM_THRESHOLD_MIN
     ? ` Sesión larga (${durationMin} min): incluí ${SODIUM_TARGET_MG_PER_H.min}–${SODIUM_TARGET_MG_PER_H.max} mg de sodio/hora para prevenir fatiga por electrolitos.`
     : '';
+  const activityType = params.checkin?.trainingType ?? 'strength';
+  const kcalBurned = estimateKcalBurned(
+    params.checkin?.averageHR ?? null,
+    params.userWeightKg ?? null,
+    durationMin
+  );
+  const kcalNote = kcalBurned != null ? ` Gasto estimado: ${kcalBurned} kcal.` : '';
+  const sweat = durationMin > 0 ? estimateSweatLoss(durationMin, activityType) : null;
+  const sweatNote = sweat ? ` Sudoración estimada: ${sweat.label} — reponé fluidos post-sesión.` : '';
   const reasoning = planEntry
-    ? `${buildIntraReasoning(durationMin, requiresIntra)} ${buildPersonalizedPostReasoning(dayType, params.userWeightKg ?? null)}${sodiumNote}`
+    ? `${buildIntraReasoning(durationMin, requiresIntra)} ${buildPersonalizedPostReasoning(dayType, params.userWeightKg ?? null)}${sodiumNote}${kcalNote}${sweatNote}`
     : buildPersonalizedPostReasoning('rest', null);
 
   const buildMoment = (moment: NutritionMoment, foods: FoodOption[]) => {
@@ -301,7 +334,7 @@ export function buildNutritionPlan(params: {
       preWorkout: buildMoment("preWorkout", preFoods),
       intraWorkout: buildMoment("intraWorkout", intraFoods),
       postWorkout: buildMoment("postWorkout", postFoods),
-      snack: buildMoment("snack", pickFoods("snack", focus, daySeed)),
+      snack: buildMoment("snack", pickFoods("snack", focus, daySeed, preferenceScores)),
       dinner: buildMoment("dinner", dinnerFoods),
     },
   };
