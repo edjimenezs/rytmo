@@ -155,20 +155,31 @@ const pickFoods = (
   moment: NutritionMoment,
   focus: string | null,
   daySeed: number = 0,
-  preferenceScores: Map<string, number> = new Map()
+  preferenceScores: Map<string, number> = new Map(),
+  dislikedFoods: string[] = [],
+  likedFoods: string[] = []
 ): FoodOption[] => {
+  const dislikedSet = new Set(dislikedFoods.map((n) => n.toLowerCase()));
+
   const candidates = foodCatalog.filter((option) => {
     if (option.moment !== moment) return false;
+    if (dislikedSet.size > 0 && dislikedSet.has(option.name.toLowerCase())) return false;
     if (focus && !option.focus.includes(focus)) return false;
     return true;
   });
   const pool = candidates.length > 0
     ? candidates
-    : foodCatalog.filter((option) => option.moment === moment);
+    : foodCatalog.filter((o) => o.moment === moment && !dislikedSet.has(o.name.toLowerCase()));
   if (pool.length <= 3) return pool;
 
+  // Build effective scores: confirmed eaten > explicitly liked > unscored
+  const effectiveScores = new Map(preferenceScores);
+  for (const name of likedFoods) {
+    if (!effectiveScores.has(name)) effectiveScores.set(name, 1);
+  }
+
   // Sort: foods the user has confirmed eating rise to top, then rotate the rest by daySeed
-  const withScores = pool.map((f) => ({ f, score: preferenceScores.get(f.name) ?? 0 }));
+  const withScores = pool.map((f) => ({ f, score: effectiveScores.get(f.name) ?? 0 }));
   withScores.sort((a, b) => b.score - a.score || 0);
   const preferred = withScores.filter((x) => x.score > 0).map((x) => x.f);
   const rest = withScores.filter((x) => x.score === 0).map((x) => x.f);
@@ -201,9 +212,13 @@ export function buildNutritionPlan(params: {
   userWeightKg?: number | null;
   defaultDayType?: string;
   preferenceScores?: Map<string, number>;
+  likedFoods?: string[];
+  dislikedFoods?: string[];
 }) {
   const { planEntry, loads } = params;
   const preferenceScores = params.preferenceScores ?? new Map<string, number>();
+  const likedFoods = params.likedFoods ?? [];
+  const dislikedFoods = params.dislikedFoods ?? [];
 
   const baseDayType = canonicalDayType(planEntry, params.checkin, params.defaultDayType);
   const baseFocus = planEntry?.focus ?? (baseDayType === "rest" ? "maintenance" : null);
@@ -226,10 +241,10 @@ export function buildNutritionPlan(params: {
   const daySeed = today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()
     + activityHash * 7 + durationBucket * 31;
 
-  const preFoods = pickFoods("preWorkout", focus, daySeed, preferenceScores);
-  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus, daySeed, preferenceScores) : [];
-  const postFoods = pickFoods("postWorkout", focus, daySeed, preferenceScores);
-  const dinnerFoods = pickFoods("dinner", focus, daySeed, preferenceScores);
+  const preFoods = pickFoods("preWorkout", focus, daySeed, preferenceScores, dislikedFoods, likedFoods);
+  const intraFoods = requiresIntra ? pickFoods("intraWorkout", focus, daySeed, preferenceScores, dislikedFoods, likedFoods) : [];
+  const postFoods = pickFoods("postWorkout", focus, daySeed, preferenceScores, dislikedFoods, likedFoods);
+  const dinnerFoods = pickFoods("dinner", focus, daySeed, preferenceScores, dislikedFoods, likedFoods);
 
   const summary = planEntry
     ? `Hoy la sesión es ${entryLabel} con una carga ${dayType}.`
@@ -334,7 +349,7 @@ export function buildNutritionPlan(params: {
       preWorkout: buildMoment("preWorkout", preFoods),
       intraWorkout: buildMoment("intraWorkout", intraFoods),
       postWorkout: buildMoment("postWorkout", postFoods),
-      snack: buildMoment("snack", pickFoods("snack", focus, daySeed, preferenceScores)),
+      snack: buildMoment("snack", pickFoods("snack", focus, daySeed, preferenceScores, dislikedFoods, likedFoods)),
       dinner: buildMoment("dinner", dinnerFoods),
     },
   };

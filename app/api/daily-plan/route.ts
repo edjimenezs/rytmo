@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.profile.findUnique({
         where: { userId },
-        select: { defaultTrainingTime: true, weight: true, isTestUser: true },
+        select: { defaultTrainingTime: true, weight: true, isTestUser: true, likedFoods: true, dislikedFoods: true },
       }),
       prisma.trainingActivity.findMany({
         where: { userId, startDate: { gte: normalizedDate, lt: nextDate } },
@@ -152,6 +152,8 @@ export async function GET(req: NextRequest) {
       userWeightKg: profile?.weight ?? null,
       defaultDayType,
       preferenceScores,
+      likedFoods: profile?.likedFoods ?? [],
+      dislikedFoods: profile?.dislikedFoods ?? [],
     });
 
     const payload = {

@@ -94,6 +94,10 @@ model Profile {
   // Test / beta access control
   isTestUser  Boolean @default(false)
 
+  // Food preferences
+  likedFoods    String[] @default([])
+  dislikedFoods String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

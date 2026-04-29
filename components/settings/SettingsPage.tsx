@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import GarminConnectForm from './GarminConnectForm';
+import FoodPreferencesForm from './FoodPreferencesForm';
 
 interface Props {
   userId: string;
@@ -61,6 +62,15 @@ export default function SettingsPage({ userName, userEmail, hasStrava }: Props) 
 
         {/* Garmin */}
         <GarminConnectForm />
+      </section>
+
+      {/* Preferencias alimentarias */}
+      <section className="rounded-2xl bg-white shadow-sm p-5 space-y-4">
+        <div>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mis alimentos</h2>
+          <p className="text-xs text-gray-400 mt-1">Personalizá las recomendaciones según lo que comés o evitás.</p>
+        </div>
+        <FoodPreferencesForm />
       </section>
 
       {/* Accesos rápidos */}
