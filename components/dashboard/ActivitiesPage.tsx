@@ -45,6 +45,18 @@ function formatPace(pace: number | null): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')} /km`;
 }
 
+function formatSpeed(distanceMeters: number | null, durationSeconds: number | null): string {
+  if (!distanceMeters || !durationSeconds) return 'N/A';
+  const kmh = (distanceMeters / 1000) / (durationSeconds / 3600);
+  return kmh.toFixed(1) + ' km/h';
+}
+
+const CYCLING_TYPES = new Set(['CYCLING', 'RIDE', 'VIRTUALRIDE', 'EBIKERIDE', 'HANDCYCLE']);
+
+function isCycling(type: string): boolean {
+  return CYCLING_TYPES.has(type.toUpperCase());
+}
+
 function getActivityIcon(type: string): string {
   const icons: Record<string, string> = {
     RUNNING: '🏃',
@@ -258,13 +270,24 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
                                 </p>
                               </div>
                             )}
-                            {activity.averagePace && (
-                              <div>
-                                <p className="text-xs text-gray-500">Avg Pace</p>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {formatPace(activity.averagePace)}
-                                </p>
-                              </div>
+                            {isCycling(activity.type) ? (
+                              activity.distance && activity.duration ? (
+                                <div>
+                                  <p className="text-xs text-gray-500">Avg Speed</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {formatSpeed(activity.distance, activity.duration)}
+                                  </p>
+                                </div>
+                              ) : null
+                            ) : (
+                              activity.averagePace ? (
+                                <div>
+                                  <p className="text-xs text-gray-500">Avg Pace</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {formatPace(activity.averagePace)}
+                                  </p>
+                                </div>
+                              ) : null
                             )}
                             {activity.averageHeartRate && (
                               <div>
@@ -282,7 +305,7 @@ export default function ActivitiesPage({ user }: { user: Session["user"] }) {
                                 </p>
                               </div>
                             )}
-                            {activity.calories && (
+                            {activity.calories != null && activity.calories > 0 && (
                               <div>
                                 <p className="text-xs text-gray-500">Calories</p>
                                 <p className="text-sm font-medium text-gray-900">
