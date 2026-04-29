@@ -198,14 +198,23 @@ export class GarminClient {
 }
 
 export async function createGarminClient(userId: string): Promise<GarminClient> {
-  const email = process.env.GARMIN_EMAIL;
-  const password = process.env.GARMIN_PASSWORD;
+  const integration = await prisma.garminIntegration.findUnique({ where: { userId } });
 
-  if (!email || !password) {
-    throw new Error('GARMIN_EMAIL and GARMIN_PASSWORD environment variables are required');
+  let email: string | undefined;
+  let password: string | undefined;
+
+  if (integration?.garminEmail && integration?.garminPassword) {
+    const { decryptPassword } = await import('./encryption');
+    email = integration.garminEmail;
+    password = decryptPassword(integration.garminPassword);
+  } else {
+    email = process.env.GARMIN_EMAIL;
+    password = process.env.GARMIN_PASSWORD;
   }
 
-  const integration = await prisma.garminIntegration.findUnique({ where: { userId } });
+  if (!email || !password) {
+    throw new Error('Garmin no configurado: el usuario no ha conectado su cuenta de Garmin');
+  }
 
   const initialTokens = integration
     ? {

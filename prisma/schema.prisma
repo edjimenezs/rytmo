@@ -89,6 +89,9 @@ model Profile {
   location    String? // Free-text location
   defaultTrainingTime String? // 'morning' | 'midday' | 'evening'
 
+  // Test / beta access control
+  isTestUser  Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -360,6 +363,8 @@ model GarminIntegration {
   oauth1Token Json
   oauth2Token Json
   lastSyncAt  DateTime?
+  garminEmail    String?
+  garminPassword String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

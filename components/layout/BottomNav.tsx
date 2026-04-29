@@ -7,7 +7,7 @@ const tabs = [
   { href: '/dashboard', label: 'Inicio', icon: 'home' as const },
   { href: '/dashboard/activities', label: 'Actividades', icon: 'list' as const },
   { href: '/plan', label: 'Plan', icon: 'calendar' as const },
-  { href: '/checkin', label: 'Yo', icon: 'person' as const },
+  { href: '/dashboard/settings', label: 'Yo', icon: 'person' as const },
 ];
 
 function HomeIcon() {
