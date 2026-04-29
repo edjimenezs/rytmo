@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DailyPlanView from '@/components/nutrition/DailyPlanView';
+import { getActivityIcon, isCyclingActivity, isSwimmingActivity } from '@/lib/activity/icon';
 
 interface Activity {
   id: string;
@@ -22,15 +23,6 @@ interface Activity {
   notes: string | null;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  RUNNING: '🏃',
-  CYCLING: '🚴',
-  SWIMMING: '🏊',
-  WALKING: '🚶',
-  WEIGHTLIFTING: '🏋️',
-  YOGA: '🧘',
-  OTHER: '⚡',
-};
 
 const SOURCE_LABEL: Record<string, { label: string; color: string }> = {
   STRAVA: { label: 'Strava', color: 'bg-orange-100 text-orange-800' },
@@ -56,6 +48,19 @@ function fmtPace(pace: number | null): string {
   const min = Math.floor(pace);
   const sec = Math.round((pace - min) * 60);
   return `${min}:${sec.toString().padStart(2, '0')} /km`;
+}
+
+function fmtSwimPace(paceMinKm: number | null): string {
+  if (!paceMinKm) return '';
+  const p = paceMinKm / 10; // min/km → min/100m
+  const min = Math.floor(p);
+  const sec = Math.round((p - min) * 60);
+  return `${min}:${sec.toString().padStart(2, '0')} /100m`;
+}
+
+function fmtSpeed(distanceM: number | null, durationS: number | null): string {
+  if (!distanceM || !durationS) return '';
+  return `${((distanceM / 1000) / (durationS / 3600)).toFixed(1)} km/h`;
 }
 
 function StatCell({ label, value }: { label: string; value: string }) {
@@ -101,7 +106,9 @@ export default function ActivityDetailView({ activityId }: { activityId: string 
     );
   }
 
-  const icon = TYPE_ICON[activity.type] ?? '⚡';
+  const icon = getActivityIcon(activity.type, activity.name);
+  const cycling = isCyclingActivity(activity.type, activity.name);
+  const swimming = isSwimmingActivity(activity.type, activity.name);
   const badge = SOURCE_LABEL[activity.source] ?? { label: activity.source, color: 'bg-gray-100 text-gray-700' };
   const activityDate = activity.startDate.slice(0, 10);
   const startTime = new Date(activity.startDate).toLocaleTimeString('es-CL', {
@@ -118,7 +125,15 @@ export default function ActivityDetailView({ activityId }: { activityId: string 
   const stats: { label: string; value: string }[] = [
     { label: 'Duración', value: fmtDuration(activity.duration) },
     ...(activity.distance ? [{ label: 'Distancia', value: fmtDistance(activity.distance) }] : []),
-    ...(activity.averagePace ? [{ label: 'Paso medio', value: fmtPace(activity.averagePace) }] : []),
+    ...(cycling && activity.distance && activity.duration
+      ? [{ label: 'Velocidad', value: fmtSpeed(activity.distance, activity.duration) }]
+      : []),
+    ...(!cycling && !swimming && activity.averagePace
+      ? [{ label: 'Paso medio', value: fmtPace(activity.averagePace) }]
+      : []),
+    ...(swimming && activity.averagePace
+      ? [{ label: 'Ritmo', value: fmtSwimPace(activity.averagePace) }]
+      : []),
     ...(activity.averageHeartRate ? [{ label: 'FC media', value: `${Math.round(activity.averageHeartRate)} bpm` }] : []),
     ...(activity.maxHeartRate ? [{ label: 'FC máx', value: `${Math.round(activity.maxHeartRate)} bpm` }] : []),
     ...(activity.elevation && activity.elevation > 0 ? [{ label: 'Desnivel', value: `${Math.round(activity.elevation)} m` }] : []),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { getActivityIcon } from '@/lib/activity/icon';
 
 type ActivityType =
   | 'RUNNING' | 'CYCLING' | 'SWIMMING' | 'WALKING' | 'WEIGHTLIFTING'
@@ -306,7 +307,7 @@ export default function HomeCard() {
                   href={`/dashboard/activities/${todayActivity.id}`}
                   className="flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="text-xl">{TYPE_ICON[todayActivity.type] ?? '⚡'}</span>
+                  <span className="text-xl">{getActivityIcon(todayActivity.type, todayActivity.name)}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{todayActivity.name}</p>
                     <p className="text-xs text-gray-400">
@@ -445,7 +446,7 @@ function WeekStrip({ history }: { history: HistoryDay[] }) {
                 isToday ? 'bg-blue-50 ring-2 ring-blue-200' : activity ? 'bg-green-50' : 'bg-gray-50'
               }`}>
                 {activity
-                  ? <span>{TYPE_ICON[activity.type] ?? '⚡'}</span>
+                  ? <span>{getActivityIcon(activity.type, activity.name)}</span>
                   : <span className="w-1.5 h-1.5 rounded-full bg-gray-200 block" />}
               </div>
               <span className="text-[9px] text-gray-400 w-full text-center truncate">
