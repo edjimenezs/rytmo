@@ -140,10 +140,12 @@ function dayTypeFromCheckin(checkin?: CheckinInput): string {
   return 'rest';
 }
 
-const canonicalDayType = (planEntry?: NutritionPlanEntry, checkin?: CheckinInput): string => {
+const canonicalDayType = (planEntry?: NutritionPlanEntry, checkin?: CheckinInput, defaultDayType?: string): string => {
   if (planEntry) return planEntry.dayType ?? "moderate";
-  // No training plan entry — derive from check-in data
-  return dayTypeFromCheckin(checkin);
+  const fromCheckin = dayTypeFromCheckin(checkin);
+  // When no training data at all, fall back to ACWR-based inference if provided
+  if (fromCheckin === "rest" && !checkin?.trainingType && defaultDayType) return defaultDayType;
+  return fromCheckin;
 };
 
 const pickFoods = (moment: NutritionMoment, focus: string | null, daySeed: number = 0): FoodOption[] => {
@@ -180,10 +182,11 @@ export function buildNutritionPlan(params: {
   loads: { atl: number | null; ctl: number | null; acwr: number | null };
   checkin?: CheckinInput;
   userWeightKg?: number | null;
+  defaultDayType?: string;
 }) {
   const { planEntry, loads } = params;
 
-  const baseDayType = canonicalDayType(planEntry, params.checkin);
+  const baseDayType = canonicalDayType(planEntry, params.checkin, params.defaultDayType);
   const baseFocus = planEntry?.focus ?? (baseDayType === "rest" ? "maintenance" : null);
   const durationMin = planEntry?.durationMinutes ?? params.checkin?.durationMin ?? 0;
   const baseRequiresIntra = !!planEntry?.requiresIntraFuel || durationMin >= INTRA_FUEL_THRESHOLD_MIN;

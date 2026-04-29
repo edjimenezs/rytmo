@@ -108,11 +108,22 @@ export async function GET(req: NextRequest) {
       hrvStatus: garminHealth?.hrvStatus ?? null,
     };
 
+    // When no training info available, use ACWR to infer a reasonable default day type
+    let defaultDayType: string | undefined;
+    if (!mergedCheckin.trainingType) {
+      if (Number.isFinite(acwr) && acwr > 0) {
+        defaultDayType = acwr > 1.3 ? 'rest' : acwr >= 0.8 ? 'moderate' : 'low';
+      } else if (loadsRaw.length > 0) {
+        defaultDayType = 'low';
+      }
+    }
+
     const planResponse = buildNutritionPlan({
       planEntry: planEntry ?? undefined,
       loads: { atl, ctl, acwr: Number.isFinite(acwr) ? acwr : null },
       checkin: mergedCheckin,
       userWeightKg: profile?.weight ?? null,
+      defaultDayType,
     });
 
     const payload = {

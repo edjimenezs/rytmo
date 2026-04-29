@@ -322,6 +322,9 @@ export default function HomeCard() {
                 <p className="text-xs text-gray-400 line-clamp-2">{reasoning}</p>
               )}
 
+              {/* Week strip */}
+              {!historyLoading && <WeekStrip history={history} />}
+
               {/* Scheduled workout: Garmin calendar or CSV plan entry */}
               {(scheduledWorkouts.length > 0 || planEntry) && (
                 <p className="text-sm text-gray-500 flex items-center gap-1.5 flex-wrap">
@@ -394,72 +397,65 @@ export default function HomeCard() {
         )}
       </div>
 
-      {/* History section */}
-      <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">
-          Historial reciente
-        </h3>
-        {historyLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl bg-gray-100 animate-pulse h-16" />
-            ))}
-          </div>
-        ) : history.length === 0 ? (
-          <p className="text-sm text-gray-400 px-1">Sin actividades sincronizadas aún</p>
-        ) : (
-          <div className="space-y-2">
-            {history.map((day) => (
-              <DayHistoryRow key={day.date} day={day} />
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
 
-function DayHistoryRow({ day }: { day: HistoryDay }) {
-  const mainActivity = day.activities[0] ?? null;
-  const extraCount = day.activities.length - 1;
-  const icon = mainActivity ? (TYPE_ICON[mainActivity.type] ?? '⚡') : '🍽️';
-  const headline = day.plan?.aiHeadline ?? day.plan?.summary ?? null;
-  const dayLabel = fmtDate(day.date);
 
-  const href = mainActivity
-    ? `/dashboard/activities/${mainActivity.id}`
-    : `/plan?date=${day.date}`;
+function WeekStrip({ history }: { history: HistoryDay[] }) {
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0]!;
+  const dow = now.getUTCDay(); // 0=Sun
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const mondayMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + mondayOffset);
+
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mondayMs + i * 86400000);
+    return d.toISOString().split('T')[0]!;
+  });
+
+  const LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  const historyMap = new Map(history.map(d => [d.date, d]));
+
+  const weekSessions = weekDates.filter(d => (historyMap.get(d)?.activities.length ?? 0) > 0).length;
+  const weekDuration = weekDates.flatMap(d => historyMap.get(d)?.activities ?? [])
+    .reduce((s, a) => s + (a.duration ?? 0), 0);
 
   return (
-    <Link href={href} className="block">
-      <div className="rounded-xl bg-white shadow-sm px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors">
-        <span className="text-2xl mt-0.5">{icon}</span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-gray-800">{dayLabel}</span>
-            {mainActivity && (
-              <span className="text-xs text-gray-400 shrink-0">
-                {[fmtDuration(mainActivity.duration), fmtDistance(mainActivity.distance)]
-                  .filter(Boolean)
-                  .join(' · ')}
-                {extraCount > 0 && ` +${extraCount}`}
-              </span>
-            )}
-          </div>
-          {mainActivity && (
-            <p className="text-xs text-gray-500 truncate">
-              {mainActivity.name}
-              {mainActivity.source !== 'MANUAL' && (
-                <span className="ml-1 text-gray-400">({mainActivity.source.toLowerCase()})</span>
-              )}
-            </p>
-          )}
-          {headline && (
-            <p className="text-xs text-gray-400 truncate mt-0.5">{headline}</p>
-          )}
-        </div>
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Esta semana</p>
+        {weekSessions > 0 && (
+          <p className="text-xs text-gray-400">
+            {weekSessions} {weekSessions === 1 ? 'sesión' : 'sesiones'}{weekDuration > 0 ? ` · ${fmtDuration(weekDuration)}` : ''}
+          </p>
+        )}
       </div>
-    </Link>
+      <div className="flex gap-1">
+        {weekDates.map((date, i) => {
+          const activity = historyMap.get(date)?.activities[0] ?? null;
+          const isToday = date === todayStr;
+          const isFuture = date > todayStr;
+          return (
+            <div key={date} className={`flex-1 flex flex-col items-center gap-0.5 ${isFuture ? 'opacity-25' : ''}`}>
+              <span className={`text-[10px] font-semibold ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
+                {LABELS[i]}
+              </span>
+              <div className={`w-full aspect-square rounded-xl flex items-center justify-center text-sm ${
+                isToday ? 'bg-blue-50 ring-2 ring-blue-200' : activity ? 'bg-green-50' : 'bg-gray-50'
+              }`}>
+                {activity
+                  ? <span>{TYPE_ICON[activity.type] ?? '⚡'}</span>
+                  : <span className="w-1.5 h-1.5 rounded-full bg-gray-200 block" />}
+              </div>
+              <span className="text-[9px] text-gray-400 w-full text-center truncate">
+                {activity ? fmtDuration(activity.duration) : ''}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

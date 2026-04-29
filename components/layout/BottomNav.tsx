@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/dashboard', label: 'Inicio', icon: 'home' as const },
-  { href: '/checkin', label: 'Check-in', icon: 'clipboard' as const },
+  { href: '/dashboard/activities', label: 'Actividades', icon: 'list' as const },
   { href: '/plan', label: 'Plan', icon: 'calendar' as const },
-  { href: '/feedback', label: 'Feedback', icon: 'star' as const },
+  { href: '/checkin', label: 'Yo', icon: 'person' as const },
 ];
 
 function HomeIcon() {
@@ -19,13 +19,15 @@ function HomeIcon() {
   );
 }
 
-function ClipboardIcon() {
+function ListIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
-      <line x1="9" y1="12" x2="15" y2="12" />
-      <line x1="9" y1="16" x2="13" y2="16" />
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
     </svg>
   );
 }
@@ -41,19 +43,20 @@ function CalendarIcon() {
   );
 }
 
-function StarIcon() {
+function PersonIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }
 
 const iconComponents = {
   home: HomeIcon,
-  clipboard: ClipboardIcon,
+  list: ListIcon,
   calendar: CalendarIcon,
-  star: StarIcon,
+  person: PersonIcon,
 };
 
 const HIDDEN_PATHS = ['/', '/auth/login', '/auth/register'];
