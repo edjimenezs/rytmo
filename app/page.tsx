@@ -14,19 +14,11 @@ const integrationHighlights = [
     ctaHref: "/auth/login",
   },
   {
-    key: "trainingpeaks",
-    title: "TrainingPeaks",
-    description: "Tus sesiones planificadas alimentan los objetivos diarios y la carga de entrenamiento.",
-    icon: "📅",
-    helper: "Sincroniza bloques y fases para ver qué comer antes, durante y después.",
-    ctaHref: "/auth/login",
-  },
-  {
     key: "garmin",
-    title: "Garmin",
-    description: "Dispositivos, ritmos y frecuencia cardíaca que completan el contexto del día.",
+    title: "Garmin Connect",
+    description: "Sueño, body battery y frecuencia cardíaca en reposo completan el contexto del día.",
     icon: "⌚",
-    helper: "Combine sensores y planes en un solo panel de decisiones.",
+    helper: "Conecta tu cuenta Garmin para ajustar la nutrición según tu recuperación real.",
     ctaHref: "/auth/login",
   },
 ];
@@ -63,9 +55,9 @@ export default async function Home() {
                 Convierte tu entrenamiento en decisiones de alimentación simples para hoy.
               </h1>
               <p className="text-lg leading-relaxed text-slate-600">
-                RytMo lee tus actividades en Strava, TrainingPeaks y Garmin para sugerir comidas
-                prácticas antes, durante y después del entrenamiento. No necesitas calcular macros:
-                nosotros lo hacemos por ti.
+                RytMo lee tus actividades en Strava y Garmin para sugerir comidas prácticas antes,
+                durante y después del entrenamiento. No necesitas calcular macros: nosotros lo
+                hacemos por ti.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -83,26 +75,24 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <div className="space-y-4 rounded-3xl bg-gradient-to-br from-white to-blue-50 p-8 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900">Panel modular del día</h3>
-            <p className="text-sm text-slate-500">
-              Remote un vistazo rápido de la carga, el enfoque nutricional y el estado del plan.
-            </p>
-            <div className="flex flex-col gap-3">
-              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Carga</p>
-                <p className="text-2xl font-semibold text-slate-900">72</p>
-                <p className="text-xs text-slate-500">CTL 64 · ATL 57</p>
+          <div className="space-y-3 rounded-3xl bg-gradient-to-br from-white to-blue-50 p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Tu plan del día</p>
+              <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700">Carga alta</span>
+            </div>
+            <p className="text-xs text-slate-500">🚴 ROUVY Rodillo 75min · 187 W · 148 bpm</p>
+            <div className="flex flex-col gap-2 pt-1">
+              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <p className="text-xs font-medium text-slate-400 mb-1">Desayuno</p>
+                <p className="text-sm text-slate-800">Avena con plátano y miel · café con leche</p>
               </div>
-              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Objetivo</p>
-                <p className="text-2xl font-semibold text-slate-900">Recuperación activa</p>
-                <p className="text-xs text-slate-500">Foco en carbohidratos fáciles + proteína</p>
+              <div className="rounded-2xl bg-orange-50 px-4 py-3 shadow-sm border border-orange-100">
+                <p className="text-xs font-medium text-orange-500 mb-1">Pre-entreno · 30 min antes</p>
+                <p className="text-sm text-slate-800">1 tostada con mermelada · agua con sal</p>
               </div>
-              <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Tiempo</p>
-                <p className="text-2xl font-semibold text-slate-900">Poco más de 24 hrs</p>
-                <p className="text-xs text-slate-500">Haz check-in y ajusta la recomendación de cena</p>
+              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <p className="text-xs font-medium text-slate-400 mb-1">Post-entreno</p>
+                <p className="text-sm text-slate-800">Yogurt griego + fruta · arroz con pollo</p>
               </div>
             </div>
           </div>
@@ -115,11 +105,11 @@ export default async function Home() {
             </p>
             <h2 className="text-3xl font-semibold text-slate-900">Conecta tus plataformas favoritas</h2>
             <p className="max-w-2xl text-slate-600">
-              RytMo consume Strava, TrainingPeaks y Garmin para mantener la nutrición alineada con
-              cada sesión. Conecta y sincroniza en segundos.
+              RytMo consume Strava y Garmin para mantener la nutrición alineada con cada sesión.
+              Conecta y sincroniza en segundos.
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             {integrationHighlights.map((integration) => (
               <IntegrationCard
                 key={integration.key}
@@ -138,7 +128,7 @@ export default async function Home() {
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
               Qué hace diferente a RytMo
             </p>
-            <h2 className="text-3xl font-semibold text-slate-900">Panel modular, decisiones rápidas</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">Nutrición basada en tu entrenamiento real</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {highlights.map((highlight) => (
