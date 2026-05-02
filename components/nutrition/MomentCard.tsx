@@ -70,20 +70,20 @@ const iconComponents = { sun: SunIcon, bolt: BoltIcon, fork: ForkIcon, moon: Moo
 function MacroPill({ momentKey, food }: { momentKey: MomentKey; food: MomentFoodItem }) {
   if (momentKey === 'intraWorkout') {
     return (
-      <span className="text-xs font-semibold text-blue-700 bg-blue-50 rounded-full px-2 py-0.5">
+      <span className="text-xs font-semibold text-violet-300 bg-violet-900/40 rounded-full px-2 py-0.5">
         {food.carbs}g CHO
       </span>
     );
   }
   if (momentKey === 'postWorkout') {
     return (
-      <span className="text-xs text-gray-500">
+      <span className="text-xs text-[#8b949e]">
         {food.protein}g PRO · {food.carbs}g CHO
       </span>
     );
   }
   return (
-    <span className="text-xs text-gray-500">
+    <span className="text-xs text-[#8b949e]">
       {food.carbs}g CHO · {food.protein}g PRO · {food.kcal} kcal
     </span>
   );
@@ -99,23 +99,23 @@ export default function MomentCard({
   const IconComponent = iconComponents[_iconKey(momentKey)];
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-blue-500">
+          <span className="text-violet-400">
             <IconComponent />
           </span>
-          <span className="text-base font-semibold text-gray-900">{mealName}</span>
+          <span className="text-base font-semibold text-[#e6edf3]">{mealName}</span>
         </div>
-        <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-2.5 py-1">
+        <span className="text-xs font-medium text-[#8b949e] bg-white/10 rounded-full px-2.5 py-1">
           {timingHint}
         </span>
       </div>
 
       {/* AI text */}
       {aiText && (
-        <p className="px-5 pb-3 text-sm text-gray-500 italic leading-relaxed">{aiText}</p>
+        <p className="px-5 pb-3 text-sm text-[#8b949e] italic leading-relaxed">{aiText}</p>
       )}
 
       {/* Food list */}
@@ -123,17 +123,17 @@ export default function MomentCard({
         <div className="px-5 pb-5 space-y-3">
           {foods.map((food, idx) => (
             <div key={idx}>
-              {idx > 0 && <div className="border-t border-gray-100 mb-3" />}
-              <p className="text-sm font-semibold text-gray-900">{food.name}</p>
+              {idx > 0 && <div className="border-t border-white/[0.08] mb-3" />}
+              <p className="text-sm font-semibold text-[#e6edf3]">{food.name}</p>
               <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-gray-400">{food.portion}</span>
+                <span className="text-xs text-[#8b949e]">{food.portion}</span>
                 <MacroPill momentKey={momentKey} food={food} />
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="px-5 pb-5 text-sm text-gray-400">Sin sugerencias para este momento.</p>
+        <p className="px-5 pb-5 text-sm text-[#8b949e]">Sin sugerencias para este momento.</p>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-indigo-50 antialiased text-slate-900 pb-16">
+      <body className="min-h-screen bg-[#0d1117] antialiased text-[#e6edf3] pb-16">
         <SessionProvider>
           {children}
           <BottomNav />

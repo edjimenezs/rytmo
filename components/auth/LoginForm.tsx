@@ -25,27 +25,27 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Invalid credentials");
+        setError("Credenciales incorrectas");
       } else {
         router.push("/dashboard");
         router.refresh();
       }
     } catch (error) {
       console.error("Sign-in failed:", error);
-      setError("Something went wrong");
+      setError("Algo salió mal. Intenta de nuevo.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#0d1117] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Rytmo
+          <h2 className="mt-6 text-center text-3xl font-bold text-[#e6edf3]">
+            RytMo
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-[#8b949e]">
             Nutrición deportiva personalizada
           </p>
         </div>
@@ -53,7 +53,7 @@ export default function LoginForm() {
         {/* Strava login — primary CTA */}
         <a
           href="/api/strava/login-url"
-          className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-xl bg-[#FC4C02] text-white text-sm font-semibold hover:bg-[#e04300] transition-colors shadow-sm"
+          className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-xl bg-[#FC4C02] text-white text-sm font-semibold hover:bg-[#e04300] transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg">
             <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
@@ -63,20 +63,20 @@ export default function LoginForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-white/10" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-gray-50 text-gray-400">o ingresa con email</span>
+            <span className="px-3 bg-[#0d1117] text-[#8b949e]">o ingresa con email</span>
           </div>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="rounded-xl bg-red-900/20 border border-red-500/20 p-4">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-2">
             <div>
               <label htmlFor="email" className="sr-only">Email</label>
               <input
@@ -85,7 +85,7 @@ export default function LoginForm() {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="block w-full px-4 py-3 rounded-xl bg-[#161b22] border border-white/[0.08] text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 text-sm transition-colors"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +100,7 @@ export default function LoginForm() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="block w-full px-4 py-3 rounded-xl bg-[#161b22] border border-white/[0.08] text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 text-sm transition-colors"
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -112,13 +112,13 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "Ingresando…" : "Ingresar"}
           </button>
 
           <div className="text-center">
-            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500 text-sm">
+            <Link href="/auth/register" className="font-medium text-violet-400 hover:text-violet-300 text-sm transition-colors">
               ¿No tienes cuenta? Regístrate
             </Link>
           </div>

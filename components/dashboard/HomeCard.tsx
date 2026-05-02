@@ -174,7 +174,6 @@ export default function HomeCard() {
   useEffect(() => {
     loadToday();
     loadHistory();
-    // Non-blocking: fetch Garmin calendar for today's scheduled workout
     fetch('/api/garmin/today-workout')
       .then(r => r.ok ? r.json() : null)
       .then(async (data) => {
@@ -182,7 +181,6 @@ export default function HomeCard() {
         setScheduledWorkouts(data.workouts);
         setTodayState('has_data');
 
-        // Map Garmin activity type → checkin trainingType for the nutrition engine
         const w = data.workouts[0];
         const typeMap: Record<string, string> = {
           cycling: 'bike', indoor_cycling: 'bike', virtual_ride: 'bike',
@@ -193,7 +191,6 @@ export default function HomeCard() {
         const trainingType = typeMap[w.activityTypeKey ?? ''] ?? 'strength';
         const durationMin = w.durationSeconds ? Math.round(w.durationSeconds / 60) : null;
 
-        // Read latest checkin fresh to avoid stale closure
         const checkinJson = await fetch('/api/checkin').then(r => r.ok ? r.json() : {}).catch(() => ({} as Record<string, unknown>));
         const existing = (checkinJson as Record<string, unknown>)?.checkin as CheckinRecord | null;
         if (!existing?.trainingType) {
@@ -238,8 +235,8 @@ export default function HomeCard() {
       let stravaCount = 0;
       let garminErr = '';
       let stravaErr = '';
-
       let garminHealthErr = '';
+
       if (garminRes.status === 'fulfilled') {
         const d = await garminRes.value.json().catch(() => ({}));
         garminCount = d.synced ?? 0;
@@ -291,44 +288,39 @@ export default function HomeCard() {
     <div className="space-y-4">
       {/* Today card */}
       {todayState === 'loading' ? (
-        <div className="rounded-2xl bg-gray-100 animate-pulse h-32" />
+        <div className="rounded-2xl bg-white/5 animate-pulse h-32" />
       ) : (
-        <div className="rounded-2xl bg-white shadow-sm p-5 space-y-4">
+        <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-4">
           {todayState === 'has_data' ? (
             <>
-              {/* dayType badge */}
               {dayType && <DayTypeBadge dayType={dayType} />}
 
-              <h2 className="text-2xl font-semibold text-gray-900">{headline ?? 'Plan listo'}</h2>
+              <h2 className="text-2xl font-semibold text-[#e6edf3]">{headline ?? 'Plan listo'}</h2>
 
-              {/* Completed activity today */}
               {todayActivity && (
                 <Link
                   href={`/dashboard/activities/${todayActivity.id}`}
-                  className="flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/[0.08] px-3 py-2.5 hover:bg-white/10 transition-colors"
                 >
                   <span className="text-xl">{getActivityIcon(todayActivity.type, todayActivity.name)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{todayActivity.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-medium text-[#e6edf3] truncate">{todayActivity.name}</p>
+                    <p className="text-xs text-[#8b949e]">
                       {[fmtDuration(todayActivity.duration), fmtDistance(todayActivity.distance)].filter(Boolean).join(' · ')}
                     </p>
                   </div>
-                  <span className="text-gray-300 text-sm">›</span>
+                  <span className="text-white/20 text-sm">›</span>
                 </Link>
               )}
 
-              {/* Reasoning — shown when dayType is rest/low to explain why */}
               {(dayType === 'rest' || dayType === 'low') && reasoning && (
-                <p className="text-xs text-gray-400 line-clamp-2">{reasoning}</p>
+                <p className="text-xs text-[#8b949e] line-clamp-2">{reasoning}</p>
               )}
 
-              {/* Week strip */}
               {!historyLoading && <WeekStrip history={history} />}
 
-              {/* Scheduled workout: Garmin calendar or CSV plan entry */}
               {(scheduledWorkouts.length > 0 || planEntry) && (
-                <p className="text-sm text-gray-500 flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm text-[#8b949e] flex items-center gap-1.5 flex-wrap">
                   {planEntry ? (
                     <><span>📋</span><span>{planEntry.sessionType} · {planEntry.title}{planEntry.durationMinutes ? ` · ${Math.round(planEntry.durationMinutes)} min` : ''}</span></>
                   ) : scheduledWorkouts.map((w) => (
@@ -340,7 +332,6 @@ export default function HomeCard() {
                 </p>
               )}
 
-              {/* Time selector — always visible, highlights current selection */}
               {(hasScheduled || hasManualTrainingType) && (
                 <TimeSelector
                   current={timeOfDay}
@@ -351,18 +342,17 @@ export default function HomeCard() {
 
               <Link
                 href="/plan"
-                className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors"
+                className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-violet-600 text-white text-base font-semibold hover:bg-violet-500 transition-colors"
               >
                 Ver tu plan
               </Link>
               {!hasCheckin && (
-                <Link href="/checkin" className="block w-full text-center text-sm text-gray-500 hover:text-gray-700">
+                <Link href="/checkin" className="block w-full text-center text-sm text-[#8b949e] hover:text-[#e6edf3] transition-colors">
                   Agregar sueño y fatiga →
                 </Link>
               )}
             </>
           ) : (
-            /* No activity yet — show manual workout planner */
             <WorkoutPlanner onSave={async (type, durationMin, time) => {
               await fetch('/api/checkin', {
                 method: 'POST',
@@ -382,22 +372,21 @@ export default function HomeCard() {
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex-1 text-sm text-gray-500 hover:text-gray-700 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex-1 text-sm text-[#8b949e] hover:text-[#e6edf3] py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
           >
             {syncing ? 'Sincronizando…' : '↻ Sincronizar'}
           </button>
           <a
             href="/api/strava/auth"
-            className="text-sm text-orange-500 hover:text-orange-600 py-2 px-3 rounded-xl border border-orange-200 bg-white hover:bg-orange-50 transition-colors"
+            className="text-sm text-orange-400 hover:text-orange-300 py-2 px-3 rounded-xl border border-orange-500/30 bg-white/5 hover:bg-orange-900/20 transition-colors"
           >
             Reconectar Strava
           </a>
         </div>
         {syncMsg && (
-          <p className="text-xs text-center px-1 text-gray-500">{syncMsg}</p>
+          <p className="text-xs text-center px-1 text-[#8b949e]">{syncMsg}</p>
         )}
       </div>
-
     </div>
   );
 }
@@ -406,7 +395,7 @@ export default function HomeCard() {
 function WeekStrip({ history }: { history: HistoryDay[] }) {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0]!;
-  const dow = now.getUTCDay(); // 0=Sun
+  const dow = now.getUTCDay();
   const mondayOffset = dow === 0 ? -6 : 1 - dow;
   const mondayMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + mondayOffset);
 
@@ -425,9 +414,9 @@ function WeekStrip({ history }: { history: HistoryDay[] }) {
   return (
     <div className="space-y-2 pt-1">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Esta semana</p>
+        <p className="text-xs font-semibold text-[#8b949e] uppercase tracking-wide">Esta semana</p>
         {weekSessions > 0 && (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[#8b949e]">
             {weekSessions} {weekSessions === 1 ? 'sesión' : 'sesiones'}{weekDuration > 0 ? ` · ${fmtDuration(weekDuration)}` : ''}
           </p>
         )}
@@ -439,17 +428,17 @@ function WeekStrip({ history }: { history: HistoryDay[] }) {
           const isFuture = date > todayStr;
           return (
             <div key={date} className={`flex-1 flex flex-col items-center gap-0.5 ${isFuture ? 'opacity-25' : ''}`}>
-              <span className={`text-[10px] font-semibold ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-semibold ${isToday ? 'text-violet-400' : 'text-[#8b949e]'}`}>
                 {LABELS[i]}
               </span>
               <div className={`w-full aspect-square rounded-xl flex items-center justify-center text-sm ${
-                isToday ? 'bg-blue-50 ring-2 ring-blue-200' : activity ? 'bg-green-50' : 'bg-gray-50'
+                isToday ? 'bg-violet-900/30 ring-2 ring-violet-500/40' : activity ? 'bg-emerald-900/30' : 'bg-white/5'
               }`}>
                 {activity
                   ? <span>{getActivityIcon(activity.type, activity.name)}</span>
-                  : <span className="w-1.5 h-1.5 rounded-full bg-gray-200 block" />}
+                  : <span className="w-1.5 h-1.5 rounded-full bg-white/20 block" />}
               </div>
-              <span className="text-[9px] text-gray-400 w-full text-center truncate">
+              <span className="text-[9px] text-[#8b949e] w-full text-center truncate">
                 {activity ? fmtDuration(activity.duration) : ''}
               </span>
             </div>
@@ -461,10 +450,10 @@ function WeekStrip({ history }: { history: HistoryDay[] }) {
 }
 
 const DAY_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
-  rest:     { label: 'Recuperación',    className: 'bg-gray-100 text-gray-500' },
-  low:      { label: 'Carga baja',      className: 'bg-green-100 text-green-700' },
-  moderate: { label: 'Carga moderada',  className: 'bg-yellow-100 text-yellow-700' },
-  high:     { label: 'Carga alta',      className: 'bg-orange-100 text-orange-700' },
+  rest:     { label: 'Recuperación',    className: 'bg-white/10 text-[#8b949e]' },
+  low:      { label: 'Carga baja',      className: 'bg-emerald-900/40 text-emerald-400' },
+  moderate: { label: 'Carga moderada',  className: 'bg-amber-900/40 text-amber-400' },
+  high:     { label: 'Carga alta',      className: 'bg-orange-900/40 text-orange-400' },
 };
 
 function DayTypeBadge({ dayType }: { dayType: string }) {
@@ -488,7 +477,7 @@ function TimeSelector({
 }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-xs text-gray-400">¿A qué hora entrenas?</p>
+      <p className="text-xs text-[#8b949e]">¿A qué hora entrenas?</p>
       <div className="flex gap-2">
         {(['morning', 'midday', 'evening'] as const).map((t) => {
           const active = current === t;
@@ -499,8 +488,8 @@ function TimeSelector({
               disabled={disabled}
               className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors disabled:opacity-50 ${
                 active
-                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
-                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
+                  ? 'bg-violet-600 border-violet-600 text-white font-semibold'
+                  : 'border-white/10 bg-white/5 hover:bg-violet-900/20 hover:border-violet-500/50 hover:text-violet-300 text-[#8b949e]'
               }`}
             >
               {TIME_LABELS[t]}
@@ -533,9 +522,8 @@ function WorkoutPlanner({ onSave }: {
 
   return (
     <div className="space-y-4">
-      <p className="text-base text-gray-500">¿Qué entrenas hoy?</p>
+      <p className="text-base text-[#8b949e]">¿Qué entrenas hoy?</p>
 
-      {/* Workout type */}
       <div className="grid grid-cols-4 gap-2">
         {WORKOUT_TYPES.map((w) => (
           <button
@@ -543,8 +531,8 @@ function WorkoutPlanner({ onSave }: {
             onClick={() => setType(w.key)}
             className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border transition-colors text-xs font-medium ${
               type === w.key
-                ? 'bg-blue-600 border-blue-600 text-white'
-                : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+                ? 'bg-violet-600 border-violet-600 text-white'
+                : 'border-white/10 bg-white/5 hover:bg-violet-900/20 hover:border-violet-500/50 text-[#8b949e]'
             }`}
           >
             <span className="text-xl">{w.icon}</span>
@@ -553,9 +541,8 @@ function WorkoutPlanner({ onSave }: {
         ))}
       </div>
 
-      {/* Duration */}
       <div className="space-y-1.5">
-        <p className="text-xs text-gray-400">Duración estimada</p>
+        <p className="text-xs text-[#8b949e]">Duración estimada</p>
         <div className="flex gap-2">
           {DURATION_OPTIONS.map((d) => (
             <button
@@ -563,8 +550,8 @@ function WorkoutPlanner({ onSave }: {
               onClick={() => setDuration(d)}
               className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors ${
                 duration === d
-                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
-                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+                  ? 'bg-violet-600 border-violet-600 text-white font-semibold'
+                  : 'border-white/10 bg-white/5 hover:bg-violet-900/20 hover:border-violet-500/50 text-[#8b949e]'
               }`}
             >
               {d} min
@@ -573,9 +560,8 @@ function WorkoutPlanner({ onSave }: {
         </div>
       </div>
 
-      {/* Time of day */}
       <div className="space-y-1.5">
-        <p className="text-xs text-gray-400">¿A qué hora?</p>
+        <p className="text-xs text-[#8b949e]">¿A qué hora?</p>
         <div className="flex gap-2">
           {(['morning', 'midday', 'evening'] as const).map((t) => (
             <button
@@ -583,8 +569,8 @@ function WorkoutPlanner({ onSave }: {
               onClick={() => setTime(t)}
               className={`flex-1 text-sm py-1.5 rounded-xl border transition-colors ${
                 time === t
-                  ? 'bg-blue-600 border-blue-600 text-white font-semibold'
-                  : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 text-gray-600'
+                  ? 'bg-violet-600 border-violet-600 text-white font-semibold'
+                  : 'border-white/10 bg-white/5 hover:bg-violet-900/20 hover:border-violet-500/50 text-[#8b949e]'
               }`}
             >
               {TIME_LABELS[t]}
@@ -601,7 +587,7 @@ function WorkoutPlanner({ onSave }: {
           setSaving(false);
         }}
         disabled={!canSave || saving}
-        className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-40"
+        className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl bg-violet-600 text-white text-base font-semibold hover:bg-violet-500 transition-colors disabled:opacity-40"
       >
         {saving ? 'Generando plan…' : 'Ver mi plan'}
       </button>

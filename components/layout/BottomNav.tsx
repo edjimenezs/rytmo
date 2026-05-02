@@ -67,7 +67,7 @@ export default function BottomNav() {
   if (HIDDEN_PATHS.includes(pathname ?? '')) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 z-50 flex pb-[env(safe-area-inset-bottom,0px)]">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#0d1117]/90 backdrop-blur-md border-t border-white/10 z-50 flex pb-[env(safe-area-inset-bottom,0px)]">
       {tabs.map((tab) => {
         const isActive =
           tab.href === '/dashboard'
@@ -80,8 +80,8 @@ export default function BottomNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 min-h-[44px] ${
-              isActive ? 'text-blue-600' : 'text-gray-400'
+            className={`flex flex-col items-center justify-center gap-1 flex-1 min-h-[44px] transition-colors ${
+              isActive ? 'text-violet-400' : 'text-[#8b949e] hover:text-[#e6edf3]'
             }`}
           >
             <IconComponent />

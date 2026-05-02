@@ -67,7 +67,6 @@ export default function DailyPlanView({ date }: { date?: string }) {
         setPlan(data.plan);
 
         const checkinData = await checkinRes.json().catch(() => ({}));
-        // Suppress banner if Garmin already provided sleep/body battery data
         setHasCheckin(!!checkinData?.checkin || !!data.plan?.hasGarminHealth);
 
         fetch('/api/feedback/trends?days=7')
@@ -93,35 +92,26 @@ export default function DailyPlanView({ date }: { date?: string }) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-3/4 rounded-xl bg-gray-200 animate-pulse" />
-        <div className="h-4 w-1/3 rounded bg-gray-200 animate-pulse" />
+        <div className="h-8 w-3/4 rounded-xl bg-white/5 animate-pulse" />
+        <div className="h-4 w-1/3 rounded bg-white/5 animate-pulse" />
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className={`rounded-2xl bg-gray-100 animate-pulse ${
+            className={`rounded-2xl bg-white/5 animate-pulse ${
               i === 1 ? 'h-24' : i === 4 ? 'h-16' : 'h-20'
             }`}
           />
         ))}
-        <p className="text-sm text-gray-500 text-center">Cargando tu plan...</p>
+        <p className="text-sm text-[#8b949e] text-center">Cargando tu plan...</p>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !plan) {
     return (
-      <div className="rounded-2xl bg-red-50 p-5 space-y-2">
-        <p className="text-sm font-semibold text-red-800">No pudimos cargar tu plan.</p>
-        <p className="text-sm text-red-700">Revisa tu conexion y recarga la pagina.</p>
-      </div>
-    );
-  }
-
-  if (!plan) {
-    return (
-      <div className="rounded-2xl bg-red-50 p-5 space-y-2">
-        <p className="text-sm font-semibold text-red-800">No pudimos cargar tu plan.</p>
-        <p className="text-sm text-red-700">Revisa tu conexion y recarga la pagina.</p>
+      <div className="rounded-2xl bg-red-900/20 border border-red-500/20 p-5 space-y-2">
+        <p className="text-sm font-semibold text-red-400">No pudimos cargar tu plan.</p>
+        <p className="text-sm text-red-400/70">Revisa tu conexion y recarga la pagina.</p>
       </div>
     );
   }
@@ -129,10 +119,10 @@ export default function DailyPlanView({ date }: { date?: string }) {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-[#e6edf3]">
           {plan.aiHeadline ?? plan.summary}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[#8b949e] mt-1">
           {new Date(plan.date.slice(0, 10) + 'T12:00:00').toLocaleDateString('es-CL', {
             weekday: 'long',
             day: 'numeric',
@@ -144,7 +134,7 @@ export default function DailyPlanView({ date }: { date?: string }) {
       {!hasCheckin && (
         <Link
           href="/checkin"
-          className="flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 hover:bg-amber-100 transition-colors"
+          className="flex items-center justify-between rounded-2xl bg-amber-900/20 border border-amber-500/20 px-4 py-3 text-sm text-amber-400 hover:bg-amber-900/30 transition-colors"
         >
           <span>Agrega sueño y fatiga para mayor precisión</span>
           <span className="font-semibold">→</span>
@@ -176,7 +166,7 @@ export default function DailyPlanView({ date }: { date?: string }) {
 
       <Link
         href="/feedback"
-        className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl border border-blue-600 text-blue-600 text-base font-semibold hover:bg-blue-50 transition-colors"
+        className="block w-full min-h-[52px] leading-[52px] text-center rounded-2xl border border-violet-500/40 text-violet-400 text-base font-semibold hover:bg-violet-900/20 transition-colors"
       >
         Como te fue?
       </Link>

@@ -25,7 +25,7 @@ const initialState = {
   intensity: 'Moderate',
   sleepHours: 7.5,
   fatigue: 3,
-  timeOfDay: '' as string, // '' means "use profile default"
+  timeOfDay: '' as string,
 };
 
 type CheckinFormState = typeof initialState;
@@ -83,7 +83,6 @@ export default function CheckinForm() {
           return;
         }
 
-        // No manual check-in — try to pre-fill from today's activity
         const actRes = await fetch('/api/checkin/from-activity').catch(() => null);
         if (!active) return;
         const actData = actRes?.ok ? await actRes.json() : null;
@@ -110,7 +109,6 @@ export default function CheckinForm() {
         }
       });
 
-    // Fetch profile default training time
     fetch('/api/daily-plan')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -166,12 +164,12 @@ export default function CheckinForm() {
   return (
     <section className="space-y-5">
       <header>
-        <p className="text-sm text-gray-500">Registro diario</p>
-        <h2 className="text-2xl font-semibold text-gray-900">Cómo llega tu cuerpo hoy</h2>
+        <p className="text-sm text-[#8b949e]">Registro diario</p>
+        <h2 className="text-2xl font-semibold text-[#e6edf3]">Cómo llega tu cuerpo hoy</h2>
       </header>
 
       {hasAutoActivity && (
-        <div className="rounded-2xl px-4 py-3 text-sm bg-green-50 text-green-800 space-y-1">
+        <div className="rounded-2xl px-4 py-3 text-sm bg-emerald-900/30 border border-emerald-500/20 text-emerald-400 space-y-1">
           <div className="flex items-center gap-2 font-semibold">
             <span>✓</span>
             <span>
@@ -180,7 +178,7 @@ export default function CheckinForm() {
             </span>
           </div>
           {form.trainingType && (
-            <p className="text-green-700 pl-6">
+            <p className="text-emerald-400/70 pl-6">
               {trainingTypeLabel}
               {!isRest && ` · ${form.durationMin} min · ${intensityLabel}`}
             </p>
@@ -191,7 +189,9 @@ export default function CheckinForm() {
       {message && (
         <div
           className={`rounded-2xl px-4 py-2 text-sm ${
-            messageType === 'error' ? 'bg-red-50 text-red-800' : 'bg-blue-50 text-blue-800'
+            messageType === 'error'
+              ? 'bg-red-900/20 border border-red-500/20 text-red-400'
+              : 'bg-white/5 border border-white/10 text-[#8b949e]'
           }`}
         >
           {message}
@@ -202,7 +202,7 @@ export default function CheckinForm() {
         <button
           type="button"
           onClick={resetCheckin}
-          className="w-full text-sm text-gray-400 hover:text-red-500 transition-colors"
+          className="w-full text-sm text-[#8b949e] hover:text-red-400 transition-colors"
         >
           Resetear y cargar desde Garmin/Strava
         </button>
@@ -210,12 +210,10 @@ export default function CheckinForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Campos de entrenamiento: solo cuando NO hay datos automáticos */}
         {!hasAutoActivity && (
           <>
-            {/* Campo 1: Tipo de entrenamiento */}
-            <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
-              <p className="text-sm font-semibold text-gray-700">Tipo de entrenamiento</p>
+            <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
+              <p className="text-sm font-semibold text-[#e6edf3]">Tipo de entrenamiento</p>
               <div className="flex flex-wrap gap-2">
                 {trainingTypes.map((t) => (
                   <button
@@ -224,8 +222,8 @@ export default function CheckinForm() {
                     onClick={() => setForm((prev) => ({ ...prev, trainingType: t.value }))}
                     className={`min-h-[44px] px-5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                       form.trainingType === t.value
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-white/5 border border-white/10 text-[#8b949e] hover:bg-violet-900/20 hover:border-violet-500/50 hover:text-violet-300'
                     }`}
                   >
                     {t.label}
@@ -234,12 +232,11 @@ export default function CheckinForm() {
               </div>
             </div>
 
-            {/* Campo 2: Duración (oculto si descanso) */}
             {!isRest && (
-              <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
+              <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">Duración</p>
-                  <span className="text-sm font-bold text-blue-600">{form.durationMin} min</span>
+                  <p className="text-sm font-semibold text-[#e6edf3]">Duración</p>
+                  <span className="text-sm font-bold text-violet-400">{form.durationMin} min</span>
                 </div>
                 <div className="flex gap-2 mb-3">
                   {durationPresets.map((d) => (
@@ -249,8 +246,8 @@ export default function CheckinForm() {
                       onClick={() => setForm((prev) => ({ ...prev, durationMin: d }))}
                       className={`min-h-[44px] flex-1 rounded-xl text-sm font-semibold transition-colors ${
                         form.durationMin === d
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-white/5 border border-white/10 text-[#8b949e] hover:bg-violet-900/20'
                       }`}
                     >
                       {d === 120 ? '120+' : `${d}`}
@@ -264,15 +261,14 @@ export default function CheckinForm() {
                   step={5}
                   value={form.durationMin}
                   onChange={(e) => setForm((prev) => ({ ...prev, durationMin: Number(e.target.value) }))}
-                  className="w-full accent-blue-600"
+                  className="w-full accent-violet-500"
                 />
               </div>
             )}
 
-            {/* Campo 3: Intensidad (oculto si descanso) */}
             {!isRest && (
-              <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
-                <p className="text-sm font-semibold text-gray-700">Intensidad</p>
+              <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
+                <p className="text-sm font-semibold text-[#e6edf3]">Intensidad</p>
                 <div className="flex gap-2">
                   {intensityOptions.map((opt) => (
                     <button
@@ -281,8 +277,8 @@ export default function CheckinForm() {
                       onClick={() => setForm((prev) => ({ ...prev, intensity: opt.value }))}
                       className={`min-h-[44px] flex-1 rounded-xl text-sm font-semibold transition-colors ${
                         form.intensity === opt.value
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-white/5 border border-white/10 text-[#8b949e] hover:bg-violet-900/20'
                       }`}
                     >
                       {opt.label}
@@ -292,13 +288,12 @@ export default function CheckinForm() {
               </div>
             )}
 
-            {/* Campo 4: Hora de entrenamiento (oculto si descanso) */}
             {!isRest && (
-              <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
-                <p className="text-sm font-semibold text-gray-700">
+              <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
+                <p className="text-sm font-semibold text-[#e6edf3]">
                   Hora de entrenamiento de hoy
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[#8b949e]">
                   Opcional — solo si es diferente a tu default
                   {profileDefault
                     ? ` (${
@@ -327,8 +322,8 @@ export default function CheckinForm() {
                       }
                       className={`min-h-[44px] flex-1 rounded-xl text-sm font-semibold transition-colors ${
                         form.timeOfDay === opt.value
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-white/5 border border-white/10 text-[#8b949e] hover:bg-violet-900/20'
                       }`}
                     >
                       {opt.label}
@@ -340,11 +335,10 @@ export default function CheckinForm() {
           </>
         )}
 
-        {/* Campo 5: Sueño */}
-        <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
+        <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-700">Horas de sueño</p>
-            <span className="text-sm font-bold text-blue-600">{form.sleepHours} h</span>
+            <p className="text-sm font-semibold text-[#e6edf3]">Horas de sueño</p>
+            <span className="text-sm font-bold text-violet-400">{form.sleepHours} h</span>
           </div>
           <input
             type="range"
@@ -353,17 +347,16 @@ export default function CheckinForm() {
             step={0.5}
             value={form.sleepHours}
             onChange={(e) => setForm((prev) => ({ ...prev, sleepHours: Number(e.target.value) }))}
-            className="w-full accent-blue-600"
+            className="w-full accent-violet-500"
           />
-          <div className="flex justify-between text-xs text-gray-400">
+          <div className="flex justify-between text-xs text-[#8b949e]">
             <span>4 h</span>
             <span>12 h</span>
           </div>
         </div>
 
-        {/* Campo 6: Fatiga */}
-        <div className="rounded-2xl bg-white shadow-sm p-5 space-y-3">
-          <p className="text-sm font-semibold text-gray-700">Fatiga <span className="text-gray-400 font-normal">(1=fresh, 5=destruido)</span></p>
+        <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-5 space-y-3">
+          <p className="text-sm font-semibold text-[#e6edf3]">Fatiga <span className="text-[#8b949e] font-normal">(1=fresh, 5=destruido)</span></p>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -372,8 +365,8 @@ export default function CheckinForm() {
                 onClick={() => setForm((prev) => ({ ...prev, fatigue: n }))}
                 className={`min-h-[44px] flex-1 rounded-xl text-sm font-bold transition-colors ${
                   form.fatigue === n
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-violet-600 text-white'
+                    : 'bg-white/5 border border-white/10 text-[#8b949e] hover:bg-violet-900/20'
                 }`}
               >
                 {n}
@@ -382,13 +375,12 @@ export default function CheckinForm() {
           </div>
         </div>
 
-        {/* Fecha oculta */}
         <input type="hidden" value={form.date} />
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full min-h-[52px] rounded-2xl bg-blue-600 text-white text-base font-semibold shadow-sm hover:bg-blue-700 disabled:bg-blue-200 transition-colors"
+          className="w-full min-h-[52px] rounded-2xl bg-violet-600 text-white text-base font-semibold hover:bg-violet-500 disabled:opacity-40 transition-colors"
         >
           {saving ? 'Guardando...' : 'Guardar check-in'}
         </button>

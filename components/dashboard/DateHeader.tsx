@@ -17,8 +17,8 @@ export default function DateHeader({ firstName }: { firstName: string }) {
 
   return (
     <div className="mb-5">
-      <p className="text-xs text-gray-400 capitalize">{dateLabel}</p>
-      <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Hola, {firstName}</h1>
+      <p className="text-xs text-[#8b949e] capitalize">{dateLabel}</p>
+      <h1 className="text-2xl font-bold text-[#e6edf3] mt-0.5">Hola, {firstName}</h1>
     </div>
   );
 }

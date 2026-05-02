@@ -43,18 +43,18 @@ export default async function Home() {
   if (session) redirect('/dashboard');
 
   return (
-    <div className="bg-slate-50">
+    <div className="bg-[#0d1117]">
       <main className="mx-auto max-w-6xl px-4 py-12 md:py-16 lg:py-20">
         <section className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="space-y-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-400">
               RytMo · nutrición inteligente
             </p>
             <div className="space-y-5">
-              <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+              <h1 className="text-4xl font-semibold leading-tight text-[#e6edf3] sm:text-5xl">
                 Convierte tu entrenamiento en decisiones de alimentación simples para hoy.
               </h1>
-              <p className="text-lg leading-relaxed text-slate-600">
+              <p className="text-lg leading-relaxed text-[#8b949e]">
                 RytMo lee tus actividades en Strava y Garmin para sugerir comidas prácticas antes,
                 durante y después del entrenamiento. No necesitas calcular macros: nosotros lo
                 hacemos por ti.
@@ -63,36 +63,36 @@ export default async function Home() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/plan"
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
+                className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-500"
               >
                 Ver plan diario
               </Link>
               <Link
                 href="/auth/login"
-                className="inline-flex items-center justify-center rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-[#e6edf3] transition hover:bg-white/5"
               >
                 Iniciar sesión
               </Link>
             </div>
           </div>
-          <div className="space-y-3 rounded-3xl bg-gradient-to-br from-white to-blue-50 p-6 shadow-xl">
+          <div className="space-y-3 rounded-3xl bg-gradient-to-br from-[#1a1f2e] to-[#161b22] border border-white/[0.08] p-6 shadow-xl">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Tu plan del día</p>
-              <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700">Carga alta</span>
+              <p className="text-sm font-semibold text-[#e6edf3]">Tu plan del día</p>
+              <span className="rounded-full bg-orange-900/40 px-2.5 py-0.5 text-xs font-medium text-orange-400">Carga alta</span>
             </div>
-            <p className="text-xs text-slate-500">🚴 ROUVY Rodillo 75min · 187 W · 148 bpm</p>
+            <p className="text-xs text-[#8b949e]">🚴 ROUVY Rodillo 75min · 187 W · 148 bpm</p>
             <div className="flex flex-col gap-2 pt-1">
-              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-400 mb-1">Desayuno</p>
-                <p className="text-sm text-slate-800">Avena con plátano y miel · café con leche</p>
+              <div className="rounded-2xl bg-white/10 backdrop-blur-sm px-4 py-3">
+                <p className="text-xs font-medium text-[#8b949e] mb-1">Desayuno</p>
+                <p className="text-sm text-[#e6edf3]">Avena con plátano y miel · café con leche</p>
               </div>
-              <div className="rounded-2xl bg-orange-50 px-4 py-3 shadow-sm border border-orange-100">
-                <p className="text-xs font-medium text-orange-500 mb-1">Pre-entreno · 30 min antes</p>
-                <p className="text-sm text-slate-800">1 tostada con mermelada · agua con sal</p>
+              <div className="rounded-2xl bg-orange-900/30 px-4 py-3 border border-orange-500/20">
+                <p className="text-xs font-medium text-orange-400 mb-1">Pre-entreno · 30 min antes</p>
+                <p className="text-sm text-[#e6edf3]">1 tostada con mermelada · agua con sal</p>
               </div>
-              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-400 mb-1">Post-entreno</p>
-                <p className="text-sm text-slate-800">Yogurt griego + fruta · arroz con pollo</p>
+              <div className="rounded-2xl bg-white/10 backdrop-blur-sm px-4 py-3">
+                <p className="text-xs font-medium text-[#8b949e] mb-1">Post-entreno</p>
+                <p className="text-sm text-[#e6edf3]">Yogurt griego + fruta · arroz con pollo</p>
               </div>
             </div>
           </div>
@@ -100,11 +100,11 @@ export default async function Home() {
 
         <section className="mt-16 space-y-6">
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-400">
               Integraciones
             </p>
-            <h2 className="text-3xl font-semibold text-slate-900">Conecta tus plataformas favoritas</h2>
-            <p className="max-w-2xl text-slate-600">
+            <h2 className="text-3xl font-semibold text-[#e6edf3]">Conecta tus plataformas favoritas</h2>
+            <p className="max-w-2xl text-[#8b949e]">
               RytMo consume Strava y Garmin para mantener la nutrición alineada con cada sesión.
               Conecta y sincroniza en segundos.
             </p>
@@ -125,19 +125,19 @@ export default async function Home() {
 
         <section className="mt-16 space-y-6">
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-400">
               Qué hace diferente a RytMo
             </p>
-            <h2 className="text-3xl font-semibold text-slate-900">Nutrición basada en tu entrenamiento real</h2>
+            <h2 className="text-3xl font-semibold text-[#e6edf3]">Nutrición basada en tu entrenamiento real</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {highlights.map((highlight) => (
               <div
                 key={highlight.title}
-                className="rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur"
+                className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"
               >
-                <p className="text-sm font-semibold text-slate-900">{highlight.title}</p>
-                <p className="mt-3 text-sm text-slate-600">{highlight.detail}</p>
+                <p className="text-sm font-semibold text-[#e6edf3]">{highlight.title}</p>
+                <p className="mt-3 text-sm text-[#8b949e]">{highlight.detail}</p>
               </div>
             ))}
           </div>

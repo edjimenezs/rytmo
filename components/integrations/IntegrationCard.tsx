@@ -57,25 +57,17 @@ export default function IntegrationCard({
       setLoadingStatus(true);
       try {
         const res = await fetch(statusEndpoint);
-        if (!res.ok) {
-          throw new Error('No status');
-        }
+        if (!res.ok) throw new Error('No status');
         const data = (await res.json()) as IntegrationStatus;
-        if (isActive) {
-          setStatus(data);
-        }
+        if (isActive) setStatus(data);
       } catch {
-        if (isActive) {
-          setError('No conectado');
-        }
+        if (isActive) setError('No conectado');
       } finally {
         if (isActive) setLoadingStatus(false);
       }
     };
     void fetchStatus();
-    return () => {
-      isActive = false;
-    };
+    return () => { isActive = false; };
   }, [statusEndpoint]);
 
   const handleSync = async () => {
@@ -111,37 +103,37 @@ export default function IntegrationCard({
   };
 
   return (
-    <div className="rounded-2xl bg-white shadow border border-slate-200 p-6 space-y-4">
+    <div className="rounded-2xl bg-[#161b22] border border-white/[0.08] p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 text-2xl">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-900/30 text-violet-400 text-2xl">
           {icon}
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-500">Integración</p>
-          <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
+          <p className="text-sm font-semibold text-[#8b949e]">Integración</p>
+          <h3 className="text-xl font-semibold text-[#e6edf3]">{title}</h3>
         </div>
       </div>
-      <p className="text-sm text-slate-600">{description}</p>
+      <p className="text-sm text-[#8b949e]">{description}</p>
 
       {statusEndpoint ? (
         <>
           {loadingStatus ? (
-            <p className="text-xs text-slate-400">Cargando estado...</p>
+            <p className="text-xs text-[#8b949e]">Cargando estado...</p>
           ) : status?.connected ? (
-            <div className="flex flex-col gap-1 text-sm text-slate-600">
-              <p className="text-slate-900 text-sm font-semibold">Conectado</p>
+            <div className="flex flex-col gap-1 text-sm text-[#8b949e]">
+              <p className="text-[#e6edf3] text-sm font-semibold">Conectado</p>
               {lastSyncedLabel && <p>Última sincronización: {lastSyncedLabel}</p>}
-              {helperText && <p className="text-xs text-slate-400">{helperText}</p>}
+              {helperText && <p className="text-xs text-[#8b949e]">{helperText}</p>}
             </div>
           ) : (
-            <p className="text-sm text-amber-600 font-medium">No conectado</p>
+            <p className="text-sm text-amber-400 font-medium">No conectado</p>
           )}
         </>
       ) : (
-        helperText && <p className="text-xs text-slate-400">{helperText}</p>
+        helperText && <p className="text-xs text-[#8b949e]">{helperText}</p>
       )}
 
-      {error && <p className="text-xs text-rose-600">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
         {status?.connected ? (
@@ -151,7 +143,7 @@ export default function IntegrationCard({
                 type="button"
                 disabled={syncing}
                 onClick={handleSync}
-                className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100 disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full border border-violet-500/30 bg-violet-900/20 px-4 py-2 text-sm font-semibold text-violet-400 hover:bg-violet-900/40 disabled:opacity-50 transition-colors"
               >
                 {syncing ? 'Sincronizando...' : 'Sincronizar ahora'}
               </button>
@@ -161,7 +153,7 @@ export default function IntegrationCard({
                 type="button"
                 disabled={disconnecting}
                 onClick={handleDisconnect}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-[#8b949e] hover:bg-white/10 disabled:opacity-50 transition-colors"
               >
                 {disconnecting ? 'Desconectando...' : 'Desconectar'}
               </button>
@@ -171,14 +163,14 @@ export default function IntegrationCard({
           authEndpoint ? (
             <a
               href={authEndpoint}
-              className="inline-flex items-center justify-center rounded-full border border-transparent bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="inline-flex items-center justify-center rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors"
             >
               Conectar
             </a>
           ) : ctaHref ? (
             <a
               href={ctaHref}
-              className="inline-flex items-center justify-center rounded-full border border-transparent bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+              className="inline-flex items-center justify-center rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors"
             >
               Ver detalles
             </a>
